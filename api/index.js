@@ -1,3 +1,4 @@
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -14,7 +15,9 @@ const PAGES_DIR = path.join(PUBLIC_DIR, 'assets');
 // Supabase might provide POSTGRES_URL or DATABASE_URL
 const pool = new Pool({
     connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
+    ssl: {
+        rejectUnauthorized: false
+    }
 });
 
 // Middleware
@@ -43,7 +46,7 @@ app.get('/api/init-db', async (req, res) => {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);
-        
+
         await pool.query(`
             CREATE TABLE IF NOT EXISTS visitors (
                 id TEXT PRIMARY KEY,
@@ -97,7 +100,7 @@ app.get('/api/visitors', async (req, res) => {
     try {
         const { rows } = await pool.query("SELECT * FROM visitors ORDER BY created_at DESC");
         res.json(rows);
-    } catch(err) { res.status(500).json({error: err.message}); }
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 // 2. Register
@@ -105,13 +108,13 @@ app.post('/api/register', async (req, res) => {
     try {
         const { id, name, address, age, gender, resort, visitorType, duration, members, total } = req.body;
         const membersStr = members ? JSON.stringify(members) : '[]';
-        
+
         await pool.query(
             "INSERT INTO visitors (id, name, address, age, gender, resort, visitor_type, duration, members, total, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'Active')",
             [id, name, address, age, gender, resort, visitorType, duration, membersStr, total]
         );
         res.json({ message: 'Visitor registered successfully', id });
-    } catch(err) { res.status(500).json({error: err.message}); }
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 // 3. Checkout visitor
@@ -121,7 +124,7 @@ app.post('/api/checkout', async (req, res) => {
         const result = await pool.query("UPDATE visitors SET status = 'Checked Out' WHERE id = $1 AND status = 'Active'", [id]);
         if (result.rowCount === 0) return res.status(404).json({ message: 'Visitor not found or already checked out' });
         res.json({ message: 'Checked out successfully' });
-    } catch(err) { res.status(500).json({error: err.message}); }
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 // 4. Update visitor status
@@ -131,7 +134,7 @@ app.post('/api/visitors/status', async (req, res) => {
         const result = await pool.query("UPDATE visitors SET status = $1 WHERE id = $2", [status, id]);
         if (result.rowCount === 0) return res.status(404).json({ message: 'Visitor not found' });
         res.json({ message: 'Status updated successfully' });
-    } catch(err) { res.status(500).json({error: err.message}); }
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 // 5. User Account Management
@@ -139,7 +142,7 @@ app.get('/api/users', async (req, res) => {
     try {
         const { rows } = await pool.query("SELECT id, username, role, level, created_at FROM users");
         res.json(rows);
-    } catch(err) { res.status(500).json({error: err.message}); }
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.post('/api/users', async (req, res) => {
@@ -147,10 +150,10 @@ app.post('/api/users', async (req, res) => {
         const { username, password, role, level } = req.body;
         const check = await pool.query("SELECT id FROM users WHERE LOWER(username) = LOWER($1)", [username]);
         if (check.rows.length > 0) return res.status(500).json({ error: 'Username already exists' });
-        
+
         const result = await pool.query("INSERT INTO users (username, password, role, level) VALUES ($1, $2, $3, $4) RETURNING id", [username, password, role, level]);
         res.json({ message: 'User account created', id: result.rows[0].id });
-    } catch(err) { res.status(500).json({error: err.message}); }
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.put('/api/users/:id', async (req, res) => {
@@ -163,7 +166,7 @@ app.put('/api/users/:id', async (req, res) => {
             await pool.query("UPDATE users SET username=$1, role=$2, level=$3 WHERE id=$4", [username, role, level, id]);
         }
         res.json({ message: 'User account updated successfully' });
-    } catch(err) { res.status(500).json({error: err.message}); }
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.delete('/api/users/:id', async (req, res) => {
@@ -172,7 +175,7 @@ app.delete('/api/users/:id', async (req, res) => {
         const result = await pool.query("DELETE FROM users WHERE id=$1", [id]);
         if (result.rowCount === 0) return res.status(404).json({ error: 'User not found' });
         res.json({ message: 'User account deleted successfully' });
-    } catch(err) { res.status(500).json({error: err.message}); }
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.post('/api/login', async (req, res) => {
@@ -187,7 +190,7 @@ app.post('/api/login', async (req, res) => {
         if (rows.length === 0) return res.status(401).json({ error: 'Invalid username or password' });
 
         res.json({ id: rows[0].id, username: rows[0].username, role: rows[0].role, level: rows[0].level });
-    } catch(err) { res.status(500).json({error: err.message}); }
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 // 6. Attendance Routes
@@ -199,7 +202,7 @@ app.post('/api/attendance/timein', async (req, res) => {
 
         const result = await pool.query("INSERT INTO attendance (user_id, username, status, remarks, approval_status) VALUES ($1, $2, 'IN', $3, 'Pending') RETURNING id", [userId, username, remarks]);
         res.json({ message: 'Timed in successfully', id: result.rows[0].id });
-    } catch(err) { res.status(500).json({error: err.message}); }
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.post('/api/attendance/timeout', async (req, res) => {
@@ -215,7 +218,7 @@ app.post('/api/attendance/timeout', async (req, res) => {
             await pool.query("UPDATE attendance SET time_out = CURRENT_TIMESTAMP, status = 'OUT', remarks = $1 WHERE id = $2", [remarks, row.id]);
         }
         res.json({ message: 'Timed out successfully' });
-    } catch(err) { res.status(500).json({error: err.message}); }
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.post('/api/attendance/break', async (req, res) => {
@@ -232,7 +235,7 @@ app.post('/api/attendance/break', async (req, res) => {
             await pool.query("UPDATE attendance SET status = 'IN', total_break_time = total_break_time + CAST(EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - break_start)) AS INTEGER), break_start = NULL WHERE id = $1", [row.id]);
             res.json({ message: 'Break ended', status: 'IN' });
         }
-    } catch(err) { res.status(500).json({error: err.message}); }
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.post('/api/attendance/approve', async (req, res) => {
@@ -240,7 +243,7 @@ app.post('/api/attendance/approve', async (req, res) => {
         const { id, status } = req.body;
         await pool.query("UPDATE attendance SET approval_status = $1 WHERE id = $2", [status, id]);
         res.json({ message: `Attendance ${status.toLowerCase()} successfully` });
-    } catch(err) { res.status(500).json({error: err.message}); }
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.get('/api/attendance/status/:userId', async (req, res) => {
@@ -248,7 +251,7 @@ app.get('/api/attendance/status/:userId', async (req, res) => {
         const userId = parseInt(req.params.userId);
         const { rows } = await pool.query("SELECT * FROM attendance WHERE user_id = $1 ORDER BY time_in DESC LIMIT 1", [userId]);
         res.json(rows[0] || { status: 'OUT' });
-    } catch(err) { res.status(500).json({error: err.message}); }
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.get('/api/attendance/logs', async (req, res) => {
@@ -262,7 +265,7 @@ app.get('/api/attendance/logs', async (req, res) => {
         }
         const { rows } = await pool.query(query, params);
         res.json(rows);
-    } catch(err) { res.status(500).json({error: err.message}); }
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 // Serve frontend pages
