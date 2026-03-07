@@ -415,3 +415,16 @@ document.getElementById('age').addEventListener('change', calculatePayment);
 
 // Initial calculation
 calculatePayment();
+
+/**
+ * Check if user should land directly on a specific screen
+ */
+function checkDirectLink() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('reg') === 'true') {
+        navigateTo('registration-screen');
+    }
+}
+
+// Check for direct links after a small delay to ensure icons/styles are ready
+setTimeout(checkDirectLink, 100);
