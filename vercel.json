@@ -8,32 +8,8 @@
     ],
     "rewrites": [
         {
-            "source": "/api/(.*)",
-            "destination": "/server.js"
-        },
-        {
-            "source": "/login.html",
-            "destination": "/assets/login.html"
-        },
-        {
-            "source": "/staff.html",
-            "destination": "/assets/staff.html"
-        },
-        {
-            "source": "/admin.html",
-            "destination": "/assets/admin.html"
-        },
-        {
-            "source": "/",
-            "destination": "/assets/index.html"
-        },
-        {
-            "source": "/(.*\\.html)",
-            "destination": "/assets/$1"
-        },
-        {
             "source": "/(.*)",
-            "destination": "/assets/index.html"
+            "destination": "/server.js"
         }
     ]
 }
