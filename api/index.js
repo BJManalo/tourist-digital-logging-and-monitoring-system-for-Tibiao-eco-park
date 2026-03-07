@@ -4,8 +4,8 @@ const cors = require('cors');
 const path = require('path');
 
 const app = express();
-const PORT = 5000;
-const PUBLIC_DIR = path.join(__dirname, 'public');
+const PORT = process.env.PORT || 5000;
+const PUBLIC_DIR = path.join(__dirname, '../public');
 const PAGES_DIR = path.join(PUBLIC_DIR, 'assets');
 
 // Middleware
