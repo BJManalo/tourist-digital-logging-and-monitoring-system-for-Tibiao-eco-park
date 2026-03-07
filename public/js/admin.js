@@ -115,6 +115,12 @@ async function showView(viewId) {
         }
     });
 
+    // Cloud Sync Button (Only show on Dashboard)
+    const syncBtn = document.getElementById('cloud-sync-btn');
+    if (syncBtn) {
+        syncBtn.style.display = viewId === 'dashboard' ? 'flex' : 'none';
+    }
+
     // Close sidebar on mobile
     const sidebar = document.getElementById('sidebar');
     if (sidebar && window.innerWidth <= 1024) {
@@ -797,4 +803,70 @@ async function approveAttendance(id, status) {
         body: JSON.stringify({ id, status })
     });
     if (response.ok) showView('attendance');
+}
+
+/** CLOUD SYNCHRONIZATION **/
+async function syncCloudData() {
+    const syncBtn = document.getElementById('cloud-sync-btn');
+    const syncIcon = syncBtn.querySelector('i');
+    const syncText = syncBtn.querySelector('span');
+
+    try {
+        // Start Animation
+        syncBtn.disabled = true;
+        syncIcon.style.animation = "spin 1s linear infinite";
+        syncText.innerText = "Syncing...";
+
+        // 1. Fetch data from the Cloud (Vercel)
+        // We assume the local dashboard is running on localhost:5000 
+        // and we need to reach out to the Vercel URL
+        const CLOUD_URL = "https://tourist-digital-logging-and-monitoring-system.vercel.app";
+
+        console.log("Reaching out to cloud...");
+        const response = await fetch(`${CLOUD_URL}/api/visitors`);
+        if (!response.ok) throw new Error("Could not connect to Cloud Database");
+
+        const cloudVisitors = await response.json();
+        console.log(`Found ${cloudVisitors.length} visitors in Cloud.`);
+
+        // 2. Send each visitor to the local database
+        // The local API /api/register will handle deduplication if the ID already exists (SQLite error)
+        let syncCount = 0;
+        for (const visitor of cloudVisitors) {
+            try {
+                const localRes = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: visitor.id,
+                        name: visitor.name,
+                        address: visitor.address,
+                        age: visitor.age,
+                        gender: visitor.gender,
+                        resort: visitor.resort,
+                        visitorType: visitor.visitor_type, // Map db field to API field
+                        duration: visitor.duration,
+                        members: JSON.parse(visitor.members || '[]'),
+                        total: visitor.total
+                    })
+                });
+
+                if (localRes.ok) syncCount++;
+            } catch (err) {
+                // Likely a duplicate, skip it
+                console.log(`Skipped duplicate: ${visitor.id}`);
+            }
+        }
+
+        alert(`✅ Sync Complete! Retrieved ${syncCount} new registrations from the QR codes.`);
+        showView('dashboard'); // Refresh stats
+
+    } catch (err) {
+        console.error("Sync Error:", err);
+        alert("❌ Sync Failed: Make sure your laptop has an internet connection to reach the Cloud.");
+    } finally {
+        syncBtn.disabled = false;
+        syncIcon.style.animation = "";
+        syncText.innerText = "Sync Cloud";
+    }
 }
