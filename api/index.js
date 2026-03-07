@@ -2,11 +2,20 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const path = require('path');
+const { Pool } = require('pg');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 const PUBLIC_DIR = path.join(__dirname, '../public');
 const PAGES_DIR = path.join(PUBLIC_DIR, 'assets');
+
+// Setup Postgres Pool
+// Vercel Postgres provides process.env.POSTGRES_URL 
+// Supabase might provide POSTGRES_URL or DATABASE_URL
+const pool = new Pool({
+    connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false }
+});
 
 // Middleware
 app.use(cors());
@@ -19,189 +28,241 @@ app.use((req, res, next) => {
     next();
 });
 
-// ============================================================
-// IN-MEMORY DATABASE (used on Vercel / serverless environments)
-// For local development with a real SQLite DB, run: node server.local.js
-// ============================================================
-let visitors = [];
-let users = [
-    { id: 1, username: 'admin', password: 'password123', role: 'Administrator', level: 'admin', created_at: new Date().toISOString() }
-];
-let attendance = [];
-let nextUserId = 2;
-let nextAttendanceId = 1;
+// ==========================================================
+// Database Initialization Route (Run once by visiting /api/init-db)
+// ==========================================================
+app.get('/api/init-db', async (req, res) => {
+    try {
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                username TEXT UNIQUE NOT NULL,
+                password TEXT NOT NULL,
+                role TEXT NOT NULL,
+                level TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+        
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS visitors (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                address TEXT,
+                age INTEGER,
+                gender TEXT,
+                resort TEXT,
+                visitor_type TEXT,
+                duration TEXT,
+                members TEXT,
+                total TEXT,
+                status TEXT DEFAULT 'Active',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS attendance (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                username TEXT NOT NULL,
+                time_in TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                time_out TIMESTAMP,
+                status TEXT DEFAULT 'IN',
+                date DATE DEFAULT CURRENT_DATE,
+                remarks TEXT,
+                break_start TIMESTAMP,
+                total_break_time INTEGER DEFAULT 0,
+                approval_status TEXT DEFAULT 'Pending'
+            );
+        `);
+
+        // Seed admin user
+        const adminCheck = await pool.query("SELECT COUNT(*) FROM users");
+        if (parseInt(adminCheck.rows[0].count) === 0) {
+            await pool.query("INSERT INTO users (username, password, role, level) VALUES ($1, $2, $3, $4)",
+                ['admin', 'password123', 'Administrator', 'admin']);
+        }
+
+        res.json({ message: "PostgreSQL Database tables created and initialized successfully!" });
+    } catch (err) {
+        console.error("DB Initialization Error:", err);
+        res.status(500).json({ error: "Failed to initialize database: " + err.message });
+    }
+});
 
 // Routes
 // 1. Get all visitors
-app.get('/api/visitors', (req, res) => {
-    res.json([...visitors].reverse());
+app.get('/api/visitors', async (req, res) => {
+    try {
+        const { rows } = await pool.query("SELECT * FROM visitors ORDER BY created_at DESC");
+        res.json(rows);
+    } catch(err) { res.status(500).json({error: err.message}); }
 });
 
-// 2. Register new visitor
-app.post('/api/register', (req, res) => {
-    console.log('Registration attempt:', req.body);
-    const { id, name, address, age, gender, resort, visitorType, duration, members, total } = req.body;
-    const membersStr = members ? JSON.stringify(members) : '[]';
-
-    const visitor = {
-        id, name, address, age, gender, resort,
-        visitor_type: visitorType,
-        duration,
-        members: membersStr,
-        total,
-        status: 'Active',
-        created_at: new Date().toISOString()
-    };
-
-    visitors.push(visitor);
-    console.log(`Successfully registered visitor: ${id}`);
-    res.json({ message: 'Visitor registered successfully', id });
+// 2. Register
+app.post('/api/register', async (req, res) => {
+    try {
+        const { id, name, address, age, gender, resort, visitorType, duration, members, total } = req.body;
+        const membersStr = members ? JSON.stringify(members) : '[]';
+        
+        await pool.query(
+            "INSERT INTO visitors (id, name, address, age, gender, resort, visitor_type, duration, members, total, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'Active')",
+            [id, name, address, age, gender, resort, visitorType, duration, membersStr, total]
+        );
+        res.json({ message: 'Visitor registered successfully', id });
+    } catch(err) { res.status(500).json({error: err.message}); }
 });
 
 // 3. Checkout visitor
-app.post('/api/checkout', (req, res) => {
-    const { id } = req.body;
-    const visitor = visitors.find(v => v.id === id && v.status === 'Active');
-    if (!visitor) return res.status(404).json({ message: 'Visitor not found or already checked out' });
-    visitor.status = 'Checked Out';
-    res.json({ message: 'Checked out successfully' });
+app.post('/api/checkout', async (req, res) => {
+    try {
+        const { id } = req.body;
+        const result = await pool.query("UPDATE visitors SET status = 'Checked Out' WHERE id = $1 AND status = 'Active'", [id]);
+        if (result.rowCount === 0) return res.status(404).json({ message: 'Visitor not found or already checked out' });
+        res.json({ message: 'Checked out successfully' });
+    } catch(err) { res.status(500).json({error: err.message}); }
 });
 
 // 4. Update visitor status
-app.post('/api/visitors/status', (req, res) => {
-    const { id, status } = req.body;
-    const visitor = visitors.find(v => v.id === id);
-    if (!visitor) return res.status(404).json({ message: 'Visitor not found' });
-    visitor.status = status;
-    res.json({ message: 'Status updated successfully' });
+app.post('/api/visitors/status', async (req, res) => {
+    try {
+        const { id, status } = req.body;
+        const result = await pool.query("UPDATE visitors SET status = $1 WHERE id = $2", [status, id]);
+        if (result.rowCount === 0) return res.status(404).json({ message: 'Visitor not found' });
+        res.json({ message: 'Status updated successfully' });
+    } catch(err) { res.status(500).json({error: err.message}); }
 });
 
 // 5. User Account Management
-app.get('/api/users', (req, res) => {
-    res.json(users.map(u => ({ id: u.id, username: u.username, role: u.role, level: u.level, created_at: u.created_at })));
+app.get('/api/users', async (req, res) => {
+    try {
+        const { rows } = await pool.query("SELECT id, username, role, level, created_at FROM users");
+        res.json(rows);
+    } catch(err) { res.status(500).json({error: err.message}); }
 });
 
-app.post('/api/users', (req, res) => {
-    const { username, password, role, level } = req.body;
-    if (users.find(u => u.username.toLowerCase() === username.toLowerCase())) {
-        return res.status(500).json({ error: 'Username already exists' });
-    }
-    const newUser = { id: nextUserId++, username, password, role, level, created_at: new Date().toISOString() };
-    users.push(newUser);
-    res.json({ message: 'User account created', id: newUser.id });
+app.post('/api/users', async (req, res) => {
+    try {
+        const { username, password, role, level } = req.body;
+        const check = await pool.query("SELECT id FROM users WHERE LOWER(username) = LOWER($1)", [username]);
+        if (check.rows.length > 0) return res.status(500).json({ error: 'Username already exists' });
+        
+        const result = await pool.query("INSERT INTO users (username, password, role, level) VALUES ($1, $2, $3, $4) RETURNING id", [username, password, role, level]);
+        res.json({ message: 'User account created', id: result.rows[0].id });
+    } catch(err) { res.status(500).json({error: err.message}); }
 });
 
-app.put('/api/users/:id', (req, res) => {
-    const id = parseInt(req.params.id);
-    const { username, password, role, level } = req.body;
-    const user = users.find(u => u.id === id);
-    if (!user) return res.status(404).json({ error: 'User not found' });
-    user.username = username;
-    user.role = role;
-    user.level = level;
-    if (password) user.password = password;
-    res.json({ message: 'User account updated successfully' });
+app.put('/api/users/:id', async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const { username, password, role, level } = req.body;
+        if (password) {
+            await pool.query("UPDATE users SET username=$1, password=$2, role=$3, level=$4 WHERE id=$5", [username, password, role, level, id]);
+        } else {
+            await pool.query("UPDATE users SET username=$1, role=$2, level=$3 WHERE id=$4", [username, role, level, id]);
+        }
+        res.json({ message: 'User account updated successfully' });
+    } catch(err) { res.status(500).json({error: err.message}); }
 });
 
-app.delete('/api/users/:id', (req, res) => {
-    const id = parseInt(req.params.id);
-    const idx = users.findIndex(u => u.id === id);
-    if (idx === -1) return res.status(404).json({ error: 'User not found' });
-    users.splice(idx, 1);
-    res.json({ message: 'User account deleted successfully' });
+app.delete('/api/users/:id', async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const result = await pool.query("DELETE FROM users WHERE id=$1", [id]);
+        if (result.rowCount === 0) return res.status(404).json({ error: 'User not found' });
+        res.json({ message: 'User account deleted successfully' });
+    } catch(err) { res.status(500).json({error: err.message}); }
 });
 
-app.post('/api/login', (req, res) => {
-    const { username, password } = req.body;
-    if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
+app.post('/api/login', async (req, res) => {
+    try {
+        const { username, password } = req.body;
+        if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
 
-    const cleanUsername = username.trim().toLowerCase();
-    const cleanPassword = password.trim();
+        const cleanUsername = username.trim();
+        const cleanPassword = password.trim();
 
-    const user = users.find(u => u.username.toLowerCase() === cleanUsername && u.password === cleanPassword);
-    if (!user) return res.status(401).json({ error: 'Invalid username or password' });
+        const { rows } = await pool.query("SELECT * FROM users WHERE LOWER(username) = LOWER($1) AND password = $2", [cleanUsername, cleanPassword]);
+        if (rows.length === 0) return res.status(401).json({ error: 'Invalid username or password' });
 
-    res.json({ id: user.id, username: user.username, role: user.role, level: user.level });
+        res.json({ id: rows[0].id, username: rows[0].username, role: rows[0].role, level: rows[0].level });
+    } catch(err) { res.status(500).json({error: err.message}); }
 });
 
 // 6. Attendance Routes
-app.post('/api/attendance/timein', (req, res) => {
-    const { userId, username, remarks } = req.body;
-    const active = attendance.find(a => a.user_id === userId && a.status !== 'OUT');
-    if (active) return res.status(400).json({ error: 'You have an active shift/break. End it first.' });
+app.post('/api/attendance/timein', async (req, res) => {
+    try {
+        const { userId, username, remarks } = req.body;
+        const active = await pool.query("SELECT id FROM attendance WHERE user_id = $1 AND status != 'OUT' ORDER BY time_in DESC LIMIT 1", [userId]);
+        if (active.rows.length > 0) return res.status(400).json({ error: 'You have an active shift/break. End it first.' });
 
-    const log = {
-        id: nextAttendanceId++,
-        user_id: userId,
-        username,
-        time_in: new Date().toISOString(),
-        time_out: null,
-        status: 'IN',
-        date: new Date().toISOString().split('T')[0],
-        remarks: remarks || null,
-        break_start: null,
-        total_break_time: 0,
-        approval_status: 'Pending'
-    };
-    attendance.push(log);
-    res.json({ message: 'Timed in successfully', id: log.id });
+        const result = await pool.query("INSERT INTO attendance (user_id, username, status, remarks, approval_status) VALUES ($1, $2, 'IN', $3, 'Pending') RETURNING id", [userId, username, remarks]);
+        res.json({ message: 'Timed in successfully', id: result.rows[0].id });
+    } catch(err) { res.status(500).json({error: err.message}); }
 });
 
-app.post('/api/attendance/timeout', (req, res) => {
-    const { userId, remarks } = req.body;
-    const log = attendance.filter(a => a.user_id === userId && a.status !== 'OUT').pop();
-    if (!log) return res.status(400).json({ error: 'No active time-in found.' });
+app.post('/api/attendance/timeout', async (req, res) => {
+    try {
+        const { userId, remarks } = req.body;
+        const active = await pool.query("SELECT * FROM attendance WHERE user_id = $1 AND status != 'OUT' ORDER BY time_in DESC LIMIT 1", [userId]);
+        if (active.rows.length === 0) return res.status(400).json({ error: 'No active time-in found.' });
 
-    if (log.status === 'BREAK' && log.break_start) {
-        const breakDuration = Math.floor((new Date() - new Date(log.break_start)) / 1000);
-        log.total_break_time += breakDuration;
-        log.break_start = null;
-    }
-
-    log.time_out = new Date().toISOString();
-    log.status = 'OUT';
-    if (remarks) log.remarks = remarks;
-    res.json({ message: 'Timed out successfully' });
+        const row = active.rows[0];
+        if (row.status === 'BREAK') {
+            await pool.query("UPDATE attendance SET time_out = CURRENT_TIMESTAMP, status = 'OUT', remarks = $1, total_break_time = total_break_time + CAST(EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - break_start)) AS INTEGER), break_start = NULL WHERE id = $2", [remarks, row.id]);
+        } else {
+            await pool.query("UPDATE attendance SET time_out = CURRENT_TIMESTAMP, status = 'OUT', remarks = $1 WHERE id = $2", [remarks, row.id]);
+        }
+        res.json({ message: 'Timed out successfully' });
+    } catch(err) { res.status(500).json({error: err.message}); }
 });
 
-app.post('/api/attendance/break', (req, res) => {
-    const { userId } = req.body;
-    const log = attendance.filter(a => a.user_id === userId && a.status !== 'OUT').pop();
-    if (!log) return res.status(400).json({ error: 'No active shift found.' });
+app.post('/api/attendance/break', async (req, res) => {
+    try {
+        const { userId } = req.body;
+        const active = await pool.query("SELECT * FROM attendance WHERE user_id = $1 AND status != 'OUT' ORDER BY time_in DESC LIMIT 1", [userId]);
+        if (active.rows.length === 0) return res.status(400).json({ error: 'No active shift found.' });
 
-    if (log.status === 'IN') {
-        log.status = 'BREAK';
-        log.break_start = new Date().toISOString();
-        res.json({ message: 'Break started', status: 'BREAK' });
-    } else if (log.status === 'BREAK') {
-        const breakDuration = Math.floor((new Date() - new Date(log.break_start)) / 1000);
-        log.total_break_time += breakDuration;
-        log.break_start = null;
-        log.status = 'IN';
-        res.json({ message: 'Break ended', status: 'IN' });
-    }
+        const row = active.rows[0];
+        if (row.status === 'IN') {
+            await pool.query("UPDATE attendance SET status = 'BREAK', break_start = CURRENT_TIMESTAMP WHERE id = $1", [row.id]);
+            res.json({ message: 'Break started', status: 'BREAK' });
+        } else if (row.status === 'BREAK') {
+            await pool.query("UPDATE attendance SET status = 'IN', total_break_time = total_break_time + CAST(EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - break_start)) AS INTEGER), break_start = NULL WHERE id = $1", [row.id]);
+            res.json({ message: 'Break ended', status: 'IN' });
+        }
+    } catch(err) { res.status(500).json({error: err.message}); }
 });
 
-app.post('/api/attendance/approve', (req, res) => {
-    const { id, status } = req.body;
-    const log = attendance.find(a => a.id === id);
-    if (!log) return res.status(404).json({ error: 'Attendance log not found' });
-    log.approval_status = status;
-    res.json({ message: `Attendance ${status.toLowerCase()} successfully` });
+app.post('/api/attendance/approve', async (req, res) => {
+    try {
+        const { id, status } = req.body;
+        await pool.query("UPDATE attendance SET approval_status = $1 WHERE id = $2", [status, id]);
+        res.json({ message: `Attendance ${status.toLowerCase()} successfully` });
+    } catch(err) { res.status(500).json({error: err.message}); }
 });
 
-app.get('/api/attendance/status/:userId', (req, res) => {
-    const userId = parseInt(req.params.userId);
-    const logs = attendance.filter(a => a.user_id === userId);
-    const latest = logs[logs.length - 1];
-    res.json(latest || { status: 'OUT' });
+app.get('/api/attendance/status/:userId', async (req, res) => {
+    try {
+        const userId = parseInt(req.params.userId);
+        const { rows } = await pool.query("SELECT * FROM attendance WHERE user_id = $1 ORDER BY time_in DESC LIMIT 1", [userId]);
+        res.json(rows[0] || { status: 'OUT' });
+    } catch(err) { res.status(500).json({error: err.message}); }
 });
 
-app.get('/api/attendance/logs', (req, res) => {
-    const { userId } = req.query;
-    let result = [...attendance].reverse();
-    if (userId) result = result.filter(a => a.user_id === parseInt(userId));
-    res.json(result);
+app.get('/api/attendance/logs', async (req, res) => {
+    try {
+        const { userId } = req.query;
+        let query = "SELECT * FROM attendance ORDER BY time_in DESC";
+        let params = [];
+        if (userId) {
+            query = "SELECT * FROM attendance WHERE user_id = $1 ORDER BY time_in DESC";
+            params.push(parseInt(userId));
+        }
+        const { rows } = await pool.query(query, params);
+        res.json(rows);
+    } catch(err) { res.status(500).json({error: err.message}); }
 });
 
 // Serve frontend pages
@@ -218,6 +279,5 @@ module.exports = app;
 if (!process.env.VERCEL) {
     app.listen(PORT, '0.0.0.0', () => {
         console.log(`✅ Server running at http://localhost:${PORT}`);
-        console.log(`📱 Access from phone on same Wi-Fi: http://<your-local-IP>:${PORT}`);
     });
 }

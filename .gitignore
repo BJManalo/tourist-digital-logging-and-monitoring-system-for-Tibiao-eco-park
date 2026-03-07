@@ -1,0 +1,5 @@
+node_modules/
+.env
+database/tibiao_tourism.db
+offline_register_queue.json
+offline_checkout_queue.json
