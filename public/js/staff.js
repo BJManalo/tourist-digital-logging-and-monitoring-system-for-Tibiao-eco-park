@@ -173,10 +173,6 @@ async function showView(viewId) {
             contentArea.innerHTML = renderRevenueGraph();
             await initRevenueChart();
             break;
-        case 'checkout':
-            viewTitle.innerText = "Check-Out Terminal";
-            contentArea.innerHTML = renderCheckoutTerminal();
-            break;
         case 'payments':
             viewTitle.innerText = "Payment Logs";
             contentArea.innerHTML = `<div style="padding: 2rem; text-align: center;">Loading Transactions...</div>`;
@@ -220,7 +216,7 @@ async function renderVisitorLogs(filter = 'All') {
     `;
 
     let rows = '';
-    visitors.slice().reverse().forEach(v => {
+    visitors.forEach(v => {
         const statusClass = v.status === 'Active' ? 'badge-active' : 'badge-out';
         const membersList = JSON.parse(v.members || '[]');
         const totalPeople = 1 + membersList.length;
@@ -258,12 +254,20 @@ async function renderVisitorLogs(filter = 'All') {
 
     return `
         <div class="table-container fade-in">
-            <div style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px;">
-                <span class="badge ${filter === 'All' ? 'badge-active' : 'badge-out'}" onclick="showView('visitors')" style="cursor:pointer">All</span>
-                <span class="badge ${filter === 'Active' ? 'badge-active' : 'badge-out'}" onclick="showView('visitors-active')" style="cursor:pointer">Active</span>
-                <span class="badge ${filter === 'Checked Out' ? 'badge-active' : 'badge-out'}" onclick="showView('visitors-out')" style="cursor:pointer">Out</span>
+            <div style="margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 20px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span class="badge ${filter === 'All' ? 'badge-active' : 'badge-out'}" onclick="showView('visitors')" style="cursor:pointer">All</span>
+                    <span class="badge ${filter === 'Active' ? 'badge-active' : 'badge-out'}" onclick="showView('visitors-active')" style="cursor:pointer">Active</span>
+                    <span class="badge ${filter === 'Checked Out' ? 'badge-active' : 'badge-out'}" onclick="showView('visitors-out')" style="cursor:pointer">Out</span>
+                </div>
+                
+                <div style="position: relative; flex: 1; max-width: 300px;">
+                    <i data-lucide="search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; color: #94a3b8;"></i>
+                    <input type="text" placeholder="Search visitors..." oninput="filterTableRows(this.value, 'visitor-table')" 
+                        style="width: 100%; padding: 0.6rem 0.6rem 0.6rem 2.5rem; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 0.85rem; outline: none; transition: all 0.2s; background: #f8fafc;">
+                </div>
             </div>
-            <table class="data-table">
+            <table class="data-table" id="visitor-table">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -281,9 +285,6 @@ async function renderVisitorLogs(filter = 'All') {
     `;
 }
 
-/**
- * Render Manual Checkout Terminal
- */
 /**
  * Render Reports View with Printing and Filtering
  */
@@ -439,6 +440,9 @@ async function renderPaymentLogs() {
     let rows = '';
     visitors.forEach(v => {
         const date = new Date(v.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        const pStatus = v.payment_status || 'Paid';
+        const badgeColor = pStatus === 'Paid' ? 'background: #dcfce7; color: #166534;' : 'background: #fef3c7; color: #92400e;';
+
         rows += `
             <tr>
                 <td style="font-weight: 700; color: #64748b; font-size: 0.75rem;">${v.id}</td>
@@ -446,15 +450,31 @@ async function renderPaymentLogs() {
                 <td>${v.resort}</td>
                 <td><span style="color: #64748b;">${date}</span></td>
                 <td><span style="font-weight: 700; color: #059669; font-size: 1.1rem;">${v.total}</span></td>
-                <td><span class="badge badge-active" style="background: #e0f2fe; color: #0369a1;">Paid</span></td>
+                <td><span class="badge" style="${badgeColor}">${pStatus.toUpperCase()}</span></td>
+                <td style="text-align: center;">
+                    <button class="btn" onclick="togglePaymentStatus('${v.id}', '${pStatus}')" 
+                        style="padding: 6px; background: #f1f5f9; color: #64748b; border-radius: 8px; border: 1px solid #e2e8f0; cursor: pointer; transition: all 0.2s;"
+                        title="Toggle Payment Status">
+                        <i data-lucide="edit-3" style="width: 16px; height: 16px;"></i>
+                    </button>
+                </td>
             </tr>
         `;
     });
 
     return `
         <div class="table-container fade-in">
-            <h3 style="font-family: 'Montserrat'; margin-bottom: 1.5rem; font-size: 1.1rem;">Transaction History</h3>
-            <table class="data-table">
+            <h3 style="font-family: 'Montserrat'; margin-bottom: 0.5rem; font-size: 1.1rem;">Transaction History</h3>
+            <div style="margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 20px;">
+                 <p style="font-size: 0.8rem; color: #64748b;">Use the <i data-lucide="edit-3" style="width:12px; vertical-align:middle;"></i> icon to toggle between <span style="color:#166534;font-weight:700;">PAID</span> and <span style="color:#92400e;font-weight:700;">PENDING</span>.</p>
+                 
+                 <div style="position: relative; flex: 1; max-width: 300px;">
+                    <i data-lucide="search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; color: #94a3b8;"></i>
+                    <input type="text" placeholder="Search transactions..." oninput="filterTableRows(this.value, 'payment-table')" 
+                        style="width: 100%; padding: 0.6rem 0.6rem 0.6rem 2.5rem; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 0.85rem; outline: none; transition: all 0.2s; background: #f8fafc;">
+                </div>
+            </div>
+            <table class="data-table" id="payment-table">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -463,12 +483,39 @@ async function renderPaymentLogs() {
                         <th>DATE</th>
                         <th>AMOUNT PAID</th>
                         <th>STATUS</th>
+                        <th style="text-align: center;">ACTIONS</th>
                     </tr>
                 </thead>
                 <tbody>${rows}</tbody>
             </table>
         </div>
     `;
+}
+
+/**
+ * Toggle Payment Status
+ */
+async function togglePaymentStatus(id, currentStatus) {
+    const newStatus = currentStatus === 'Paid' ? 'Pending' : 'Paid';
+
+    // Using simple UI feedback since this is a quick action
+    if (!(await showConfirm(`Change payment status for [${id}] to [${newStatus}]?`))) return;
+
+    try {
+        const response = await fetch('/api/visitors/payment-status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, paymentStatus: newStatus })
+        });
+
+        if (response.ok) {
+            showView('payments'); // Refresh the view
+        } else {
+            alert("Failed to update payment status.");
+        }
+    } catch (err) {
+        alert("Network error.");
+    }
 }
 
 function renderRevenueGraph() {
@@ -520,21 +567,6 @@ async function initRevenueChart() {
     });
 }
 
-function processManualCheckout() {
-    const idInput = document.getElementById('manual-checkout-id').value.toUpperCase().trim();
-    if (!idInput) { alert("Please enter an ID."); return; }
-
-    let visitors = JSON.parse(localStorage.getItem('tibiao_visitors') || '[]');
-    const index = visitors.findIndex(v => v.id === idInput);
-
-    if (index === -1) { alert("ID not found."); return; }
-    if (visitors[index].status === 'Checked Out') { alert("Already checked out."); return; }
-
-    visitors[index].status = 'Checked Out';
-    localStorage.setItem('tibiao_visitors', JSON.stringify(visitors));
-    alert("Visitor successfully checked out!");
-    showView('dashboard');
-}
 
 function updateDate() {
     const dateEl = document.getElementById('current-date');
@@ -867,4 +899,19 @@ async function toggleBreak() {
         console.error("Break Toggle Error:", e);
         alert("System Error: " + e.message);
     }
+}
+
+/**
+ * Universal Table Filter
+ */
+function filterTableRows(query, tableId) {
+    const lowerQuery = query.toLowerCase().trim();
+    const table = document.getElementById(tableId);
+    if (!table) return;
+
+    const rows = table.querySelectorAll('tbody tr');
+    rows.forEach(row => {
+        const text = row.innerText.toLowerCase();
+        row.style.display = text.includes(lowerQuery) ? '' : 'none';
+    });
 }

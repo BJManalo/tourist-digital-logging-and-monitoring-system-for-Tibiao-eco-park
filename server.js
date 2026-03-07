@@ -44,8 +44,14 @@ function createTables() {
         members TEXT,
         total TEXT,
         status TEXT DEFAULT 'Active',
+        payment_status TEXT DEFAULT 'Paid',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
+
+    // Migration for visitors table
+    db.run(`ALTER TABLE visitors ADD COLUMN payment_status TEXT DEFAULT 'Paid'`, (err) => {
+        if (!err) console.log("Added payment_status column to visitors table.");
+    });
 
     db.run(`CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -116,15 +122,16 @@ app.get('/api/visitors', (req, res) => {
 // 2. Register new visitor
 app.post('/api/register', (req, res) => {
     console.log('Registration attempt:', req.body);
-    const { id, name, address, age, gender, resort, visitorType, duration, members, total } = req.body;
+    const { id, name, address, age, gender, resort, visitorType, duration, members, total, paymentStatus } = req.body;
 
     // Ensure members is a string even if empty/undefined
     const membersStr = members ? JSON.stringify(members) : '[]';
+    const payStatus = paymentStatus || 'Paid';
 
-    const sql = `INSERT OR IGNORE INTO visitors (id, name, address, age, gender, resort, visitor_type, duration, members, total, status) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active')`;
+    const sql = `INSERT OR IGNORE INTO visitors (id, name, address, age, gender, resort, visitor_type, duration, members, total, status, payment_status) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active', ?)`;
 
-    db.run(sql, [id, name, address, age, gender, resort, visitorType, duration, membersStr, total], function (err) {
+    db.run(sql, [id, name, address, age, gender, resort, visitorType, duration, membersStr, total, payStatus], function (err) {
         if (err) {
             console.error('DATABASE INSERT ERROR:', err.message);
             return res.status(500).json({ error: err.message });
@@ -137,6 +144,18 @@ app.post('/api/register', (req, res) => {
 
         console.log(`Successfully registered visitor: ${id}`);
         res.json({ message: 'Visitor registered successfully', id: id });
+    });
+});
+
+// 3. Update donor/visitor payment status
+app.post('/api/visitors/payment-status', (req, res) => {
+    const { id, paymentStatus } = req.body;
+    console.log(`Payment Status Update: [${id}] to [${paymentStatus}]`);
+
+    db.run("UPDATE visitors SET payment_status = ? WHERE id = ?", [paymentStatus, id], function (err) {
+        if (err) return res.status(500).json({ error: err.message });
+        if (this.changes === 0) return res.status(404).json({ message: 'Visitor not found' });
+        res.json({ message: 'Payment status updated successfully', status: paymentStatus });
     });
 });
 

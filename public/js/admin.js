@@ -185,7 +185,7 @@ async function renderVisitorLogs(filter = 'All') {
         visitors = visitors.filter(v => v.status === filter);
     }
 
-    let rows = visitors.slice().reverse().map(v => {
+    let rows = visitors.map(v => {
         const membersList = JSON.parse(v.members || '[]');
         return `
             <tr>
@@ -204,12 +204,20 @@ async function renderVisitorLogs(filter = 'All') {
 
     return `
         <div class="table-container fade-in">
-            <div style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px;">
-                <span class="badge ${filter === 'All' ? 'badge-active' : 'badge-out'}" onclick="showView('visitors')" style="cursor:pointer">All</span>
-                <span class="badge ${filter === 'Active' ? 'badge-active' : 'badge-out'}" onclick="showView('visitors-active')" style="cursor:pointer">Active</span>
-                <span class="badge ${filter === 'Checked Out' ? 'badge-active' : 'badge-out'}" onclick="showView('visitors-out')" style="cursor:pointer">Out</span>
+            <div style="margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 20px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span class="badge ${filter === 'All' ? 'badge-active' : 'badge-out'}" onclick="showView('visitors')" style="cursor:pointer">All</span>
+                    <span class="badge ${filter === 'Active' ? 'badge-active' : 'badge-out'}" onclick="showView('visitors-active')" style="cursor:pointer">Active</span>
+                    <span class="badge ${filter === 'Checked Out' ? 'badge-active' : 'badge-out'}" onclick="showView('visitors-out')" style="cursor:pointer">Out</span>
+                </div>
+                
+                <div style="position: relative; flex: 1; max-width: 300px;">
+                    <i data-lucide="search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; color: #94a3b8;"></i>
+                    <input type="text" placeholder="Search logs..." oninput="filterTableRows(this.value, 'visitor-table')" 
+                        style="width: 100%; padding: 0.6rem 0.6rem 0.6rem 2.5rem; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 0.85rem; outline: none; transition: all 0.2s; background: #f8fafc;">
+                </div>
             </div>
-            <table class="data-table">
+            <table class="data-table" id="visitor-table">
                 <thead>
                     <tr><th>ID</th><th>VISITOR</th><th>RESORT</th><th>PAID</th><th>STATUS</th><th>DATE</th></tr>
                 </thead>
@@ -415,27 +423,79 @@ async function renderPaymentLogs() {
     const response = await fetch('/api/visitors');
     const visitors = await response.json();
 
-    let rows = visitors.map(v => `
-        <tr>
-            <td style="font-weight: 700; color: #64748b; font-size: 0.75rem;">${v.id}</td>
-            <td style="font-weight: 600;">${v.name}</td>
-            <td>${v.resort}</td>
-            <td style="font-weight: 700; color: #059669;">${v.total}</td>
-            <td><span class="badge badge-active">PAID</span></td>
-        </tr>
-    `).join('');
+    let rows = visitors.map(v => {
+        const pStatus = v.payment_status || 'Paid';
+        const badgeColor = pStatus === 'Paid' ? 'background: #dcfce7; color: #166534;' : 'background: #fef3c7; color: #92400e;';
+
+        return `
+            <tr>
+                <td style="font-weight: 700; color: #64748b; font-size: 0.75rem;">${v.id}</td>
+                <td style="font-weight: 600;">${v.name}</td>
+                <td>${v.resort}</td>
+                <td style="font-weight: 700; color: #059669;">${v.total}</td>
+                <td><span class="badge" style="${badgeColor}">${pStatus.toUpperCase()}</span></td>
+                <td style="text-align: center;">
+                    <button class="btn" onclick="togglePaymentStatus('${v.id}', '${pStatus}')" 
+                        style="padding: 6px; background: #f1f5f9; color: #64748b; border-radius: 8px; border: 1px solid #e2e8f0; cursor: pointer; transition: all 0.2s;"
+                        title="Toggle Payment Status">
+                        <i data-lucide="edit-3" style="width: 16px; height: 16px;"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
 
     return `
         <div class="table-container fade-in">
-            <h3 style="font-family:'Montserrat'; margin-bottom: 1.5rem;">Audit Trail</h3>
-            <table class="data-table">
+            <h3 style="font-family:'Montserrat'; margin-bottom: 0.5rem;">Audit Trail</h3>
+            <div style="margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 20px;">
+                 <p style="font-size: 0.8rem; color: #64748b;">Click any record to toggle <span style="color:#166534;font-weight:700;">PAID</span> / <span style="color:#92400e;font-weight:700;">PENDING</span> status.</p>
+                 
+                 <div style="position: relative; flex: 1; max-width: 300px;">
+                    <i data-lucide="search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; color: #94a3b8;"></i>
+                    <input type="text" placeholder="Search transactions..." oninput="filterTableRows(this.value, 'payment-table')" 
+                        style="width: 100%; padding: 0.6rem 0.6rem 0.6rem 2.5rem; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 0.85rem; outline: none; transition: all 0.2s; background: #f8fafc;">
+                </div>
+            </div>
+            <table class="data-table" id="payment-table">
                 <thead>
-                    <tr><th>ID</th><th>PAYOR</th><th>DESTINATION</th><th>AMOUNT</th><th>STATUS</th></tr>
+                    <tr>
+                        <th>ID</th>
+                        <th>PAYOR</th>
+                        <th>DESTINATION</th>
+                        <th>AMOUNT</th>
+                        <th>STATUS</th>
+                        <th style="text-align: center;">ACTIONS</th>
+                    </tr>
                 </thead>
                 <tbody>${rows}</tbody>
             </table>
         </div>
     `;
+}
+
+/**
+ * Toggle Payment Status (Admin)
+ */
+async function togglePaymentStatus(id, currentStatus) {
+    const newStatus = currentStatus === 'Paid' ? 'Pending' : 'Paid';
+    if (!(await showConfirm(`Change payment status for [${id}] to [${newStatus}]?`))) return;
+
+    try {
+        const response = await fetch('/api/visitors/payment-status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, paymentStatus: newStatus })
+        });
+
+        if (response.ok) {
+            showView('payments'); // Refresh the view
+        } else {
+            alert("Failed to update payment status.");
+        }
+    } catch (err) {
+        alert("Network error.");
+    }
 }
 
 /** ACCOUNT MANAGEMENT **/
@@ -797,4 +857,19 @@ async function approveAttendance(id, status) {
         body: JSON.stringify({ id, status })
     });
     if (response.ok) showView('attendance');
+}
+
+/**
+ * Universal Table Filter
+ */
+function filterTableRows(query, tableId) {
+    const lowerQuery = query.toLowerCase().trim();
+    const table = document.getElementById(tableId);
+    if (!table) return;
+
+    const rows = table.querySelectorAll('tbody tr');
+    rows.forEach(row => {
+        const text = row.innerText.toLowerCase();
+        row.style.display = text.includes(lowerQuery) ? '' : 'none';
+    });
 }
