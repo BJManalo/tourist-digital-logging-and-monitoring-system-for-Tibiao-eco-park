@@ -121,7 +121,7 @@ app.post('/api/register', (req, res) => {
     // Ensure members is a string even if empty/undefined
     const membersStr = members ? JSON.stringify(members) : '[]';
 
-    const sql = `INSERT INTO visitors (id, name, address, age, gender, resort, visitor_type, duration, members, total, status) 
+    const sql = `INSERT OR IGNORE INTO visitors (id, name, address, age, gender, resort, visitor_type, duration, members, total, status) 
                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Active')`;
 
     db.run(sql, [id, name, address, age, gender, resort, visitorType, duration, membersStr, total], function (err) {
@@ -129,6 +129,12 @@ app.post('/api/register', (req, res) => {
             console.error('DATABASE INSERT ERROR:', err.message);
             return res.status(500).json({ error: err.message });
         }
+
+        if (this.changes === 0) {
+            console.log(`Skipped duplicate visitor: ${id}`);
+            return res.json({ message: 'Visitor already exists (skipped)', id: id, duplicate: true });
+        }
+
         console.log(`Successfully registered visitor: ${id}`);
         res.json({ message: 'Visitor registered successfully', id: id });
     });

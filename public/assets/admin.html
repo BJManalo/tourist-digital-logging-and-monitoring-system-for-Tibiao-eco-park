@@ -516,18 +516,11 @@
                     <h2 id="view-title" style="font-family: 'Montserrat'; font-size: 1.5rem; margin: 0;">Dashboard</h2>
                 </div>
                 <div style="display: flex; align-items: center; gap: 15px;">
-                    <!-- New Sync Button -->
-                    <button id="cloud-sync-btn" class="btn" onclick="syncCloudData()" 
-                            style="display: flex; align-items: center; gap: 8px; background: #6366f1; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: all 0.3s ease;">
-                        <i data-lucide="refresh-cw" style="width: 16px;"></i>
-                        <span>Sync Cloud</span>
-                    </button>
-
                     <div style="text-align: right;" class="no-print">
                         <div style="font-size: 0.85rem; font-weight: 700; color: var(--text-main);"
                             id="admin-profile-name">Admin</div>
                         <div style="font-size: 0.7rem; color: var(--text-muted); font-weight: 600;"
-                            id="admin-profile-role">System Administrator</div>
+                            id="admin-profile-role">Administrator</div>
                     </div>
                     <div style="width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--text-main);"
                         class="no-print">
@@ -543,6 +536,7 @@
     </div>
 
     <script src="js/admin.js"></script>
+    <script src="js/sync-engine.js"></script>
 </body>
 
 </html>
