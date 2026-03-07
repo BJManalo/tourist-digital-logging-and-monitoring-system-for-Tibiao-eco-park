@@ -6,38 +6,34 @@
             "use": "@vercel/node"
         }
     ],
-    "routes": [
+    "rewrites": [
         {
-            "src": "/api/(.*)",
-            "dest": "server.js"
+            "source": "/api/(.*)",
+            "destination": "/server.js"
         },
         {
-            "src": "/css/(.*)",
-            "dest": "/public/css/$1"
+            "source": "/login.html",
+            "destination": "/assets/login.html"
         },
         {
-            "src": "/js/(.*)",
-            "dest": "/public/js/$1"
+            "source": "/staff.html",
+            "destination": "/assets/staff.html"
         },
         {
-            "src": "/images/(.*)",
-            "dest": "/public/images/$1"
+            "source": "/admin.html",
+            "destination": "/assets/admin.html"
         },
         {
-            "src": "/login.html",
-            "dest": "/public/assets/login.html"
+            "source": "/",
+            "destination": "/assets/index.html"
         },
         {
-            "src": "/staff.html",
-            "dest": "/public/assets/staff.html"
+            "source": "/(.*\\.html)",
+            "destination": "/assets/$1"
         },
         {
-            "src": "/admin.html",
-            "dest": "/public/assets/admin.html"
-        },
-        {
-            "src": "/(.*)",
-            "dest": "/public/assets/index.html"
+            "source": "/(.*)",
+            "destination": "/assets/index.html"
         }
     ]
 }
