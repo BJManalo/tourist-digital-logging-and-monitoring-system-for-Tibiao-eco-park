@@ -820,7 +820,7 @@ async function syncCloudData() {
         // 1. Fetch data from the Cloud (Vercel)
         // We assume the local dashboard is running on localhost:5000 
         // and we need to reach out to the Vercel URL
-        const CLOUD_URL = "https://tourist-digital-logging-and-monitoring-system.vercel.app";
+        const CLOUD_URL = "https://tourist-digital-logging-and-monitor-three.vercel.app";
 
         console.log("Reaching out to cloud...");
         const response = await fetch(`${CLOUD_URL}/api/visitors`);
