@@ -1,0 +1,327 @@
+/* DataDash Dark Theme Override */
+:root {
+    --sidebar-width: 280px;
+    --sidebar-bg: #111827;
+    /* Very dark slate */
+    --main-bg: #0b1120;
+    /* Essentially pitch dark slate */
+    --card-bg: #1e293b;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --border-color: #334155;
+    --primary: #3b82f6;
+    /* Adjusted to a nice blue */
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+}
+
+body.dashboard-themed {
+    background-color: var(--main-bg);
+    color: var(--text-main);
+}
+
+.dashboard-themed .sidebar {
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--border-color);
+}
+
+.dashboard-themed .sidebar-brand {
+    color: var(--text-main);
+}
+
+.dashboard-themed .nav-item {
+    color: var(--text-muted);
+}
+
+.dashboard-themed .nav-item:hover,
+.dashboard-themed .nav-item.active {
+    color: var(--text-main);
+}
+
+.dashboard-themed .top-bar {
+    background: var(--sidebar-bg);
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-main);
+}
+
+.dashboard-themed .top-bar h2 {
+    color: var(--text-main);
+}
+
+.dashboard-themed .top-bar span {
+    color: var(--text-muted);
+}
+
+.dashboard-themed .stat-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+}
+
+.dashboard-themed .stat-value {
+    color: var(--text-main);
+}
+
+.dashboard-themed .stat-label {
+    color: var(--text-muted);
+}
+
+.dashboard-themed .table-container {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+}
+
+.dashboard-themed h3 {
+    color: var(--text-main) !important;
+}
+
+.dashboard-themed p {
+    color: var(--text-muted) !important;
+}
+
+.dashboard-themed .data-table th {
+    color: var(--text-muted);
+    border-bottom: 2px solid var(--border-color);
+}
+
+.dashboard-themed .data-table td {
+    color: var(--text-main);
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* User Form specifics */
+.dashboard-themed .user-form-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+}
+
+.dashboard-themed .user-form-card label {
+    color: var(--text-main);
+}
+
+.dashboard-themed .user-form-card input,
+.dashboard-themed .user-form-card select {
+    background-color: var(--sidebar-bg);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    padding: 0.8rem 1.25rem;
+}
+
+.dashboard-themed .user-form-card select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 1.2rem;
+    padding-right: 3rem !important;
+}
+
+.dashboard-themed .badge {
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.4rem 0.8rem;
+    border-radius: 999px;
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    line-height: 1;
+}
+
+.dashboard-themed .badge-out {
+    background: rgba(241, 245, 249, 0.1);
+    color: #94a3b8;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.dashboard-themed .badge-active {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success);
+}
+
+.dashboard-themed .badge-failed {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger);
+}
+
+.dashboard-themed .badge-pending {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--warning);
+}
+
+/* DataDash precise grid layouts */
+.datadash-middle-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.chart-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 1.25rem;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.chart-header {
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-main);
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chart-container {
+    position: relative;
+    flex-grow: 1;
+    min-height: 250px;
+    width: 100%;
+}
+
+@media (max-width: 1024px) {
+    .datadash-middle-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+
+    .dashboard-themed .data-table th,
+    .dashboard-themed .data-table td {
+        padding: 1rem 0.75rem;
+        font-size: 0.8rem;
+    }
+
+    .dashboard-themed .stat-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .dashboard-themed .main-content {
+        padding: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-themed .stat-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-themed .table-container {
+        padding: 1rem 0.5rem;
+        width: 100%;
+        overflow: hidden;
+    }
+
+    .dashboard-themed .table-container>div {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .dashboard-themed .data-table {
+        min-width: 500px;
+        /* Force minimum width to enable horizontal scroll instead of squishing */
+    }
+
+    .dashboard-themed .data-table th,
+    .dashboard-themed .data-table td {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.75rem;
+    }
+
+    /* Hide some columns on very small screens if they don't fit */
+    /* This applies to the Recent Transactions specifically */
+    .dashboard-themed tr th:nth-child(4),
+    .dashboard-themed tr td:nth-child(4),
+    .dashboard-themed tr th:nth-child(5),
+    .dashboard-themed tr td:nth-child(5) {
+        display: none;
+    }
+}
+
+/* Custom Premium Alert UI */
+.custom-alert-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.custom-alert-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    padding: 2rem;
+    border-radius: 24px;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
+    transform: scale(0.9);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.custom-alert-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.custom-alert-overlay.show .custom-alert-card {
+    transform: scale(1);
+}
+
+.custom-alert-message {
+    color: var(--text-main);
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.5;
+    margin-bottom: 2rem;
+}
+
+.custom-alert-btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 0.8rem 2.5rem;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-width: 120px;
+}
+
+.custom-alert-btn-secondary {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
+}
+
+.custom-alert-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.custom-alert-btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-main);
+}
