@@ -1,16 +1,16 @@
-/* DataDash Dark Theme Override */
+
 :root {
     --sidebar-width: 280px;
     --sidebar-bg: #111827;
-    /* Very dark slate */
+    
     --main-bg: #0b1120;
-    /* Essentially pitch dark slate */
+    
     --card-bg: #1e293b;
     --text-main: #f8fafc;
     --text-muted: #94a3b8;
     --border-color: #334155;
     --primary: #3b82f6;
-    /* Adjusted to a nice blue */
+    
     --success: #10b981;
     --warning: #f59e0b;
     --danger: #ef4444;
@@ -91,7 +91,7 @@ body.dashboard-themed {
     border-bottom: 1px solid var(--border-color);
 }
 
-/* User Form specifics */
+
 .dashboard-themed .user-form-card {
     background: var(--card-bg);
     border: 1px solid var(--border-color);
@@ -154,7 +154,7 @@ body.dashboard-themed {
     color: var(--warning);
 }
 
-/* DataDash precise grid layouts */
+
 .datadash-middle-grid {
     display: grid;
     grid-template-columns: 2fr 1fr;
@@ -231,7 +231,7 @@ body.dashboard-themed {
 
     .dashboard-themed .data-table {
         min-width: 500px;
-        /* Force minimum width to enable horizontal scroll instead of squishing */
+        
     }
 
     .dashboard-themed .data-table th,
@@ -240,8 +240,8 @@ body.dashboard-themed {
         font-size: 0.75rem;
     }
 
-    /* Hide some columns on very small screens if they don't fit */
-    /* This applies to the Recent Transactions specifically */
+    
+    
     .dashboard-themed tr th:nth-child(4),
     .dashboard-themed tr td:nth-child(4),
     .dashboard-themed tr th:nth-child(5),
@@ -250,7 +250,7 @@ body.dashboard-themed {
     }
 }
 
-/* Custom Premium Alert UI */
+
 .custom-alert-overlay {
     position: fixed;
     top: 0;

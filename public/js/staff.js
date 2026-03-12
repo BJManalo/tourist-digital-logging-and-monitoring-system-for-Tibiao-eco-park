@@ -1,6 +1,6 @@
 let currentUser = null;
 
-// Global Alert Replacement
+
 window.alert = function (message) {
     showAlert(message);
 };
@@ -74,12 +74,12 @@ document.addEventListener('DOMContentLoaded', () => {
     lucide.createIcons();
     updateDate();
 
-    // Unified Login Check
+
     const storedUser = localStorage.getItem('currentUser');
     if (storedUser) {
         currentUser = JSON.parse(storedUser);
 
-        // Hide login and show dashboard immediately
+
         const loginScreen = document.getElementById('login-screen');
         const dashboard = document.getElementById('dashboard-layout');
 
@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
         refreshProfile();
         showView('dashboard');
     } else {
-        // Redirect if not logged in
+
         window.location.href = 'login.html';
     }
 });
@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function applyRolePermissions() {
     const isStaff = currentUser.level === 'staff';
 
-    // Hide specialized reports/settings for staff
+
     const navItems = document.querySelectorAll('.nav-menu .nav-item');
     navItems.forEach(item => {
         const view = item.getAttribute('onclick');
@@ -110,14 +110,12 @@ function applyRolePermissions() {
     });
 }
 
-/**
- * Handle Sidebar Navigation
- */
+
 async function showView(viewId) {
     const contentArea = document.getElementById('content-area');
     const viewTitle = document.getElementById('view-title');
 
-    // Update Sidebar Active State
+
     document.querySelectorAll('.nav-item').forEach(item => {
         item.classList.remove('active');
         if (item.getAttribute('onclick')?.includes(viewId)) {
@@ -125,13 +123,13 @@ async function showView(viewId) {
         }
     });
 
-    // Close sidebar on mobile after clicking
+
     const sidebar = document.getElementById('sidebar');
     if (window.innerWidth <= 1024) {
         sidebar.classList.remove('show');
     }
 
-    // Show/Hide Header Back Button (Only for Dashboard Sub-views)
+
     const backBtn = document.getElementById('back-btn-header');
     const dashboardSubViews = ['visitors', 'visitors-active', 'visitors-out', 'revenue'];
 
@@ -141,14 +139,14 @@ async function showView(viewId) {
         backBtn.style.display = 'none';
     }
 
-    // Load Dynamic Content
+
     switch (viewId) {
         case 'dashboard':
             viewTitle.innerText = "Operation Dashboard";
             contentArea.innerHTML = `<div style="padding: 2rem; text-align: center;">Loading Data...</div>`;
             const dashboardHtml = await renderDashboard();
             contentArea.innerHTML = dashboardHtml;
-            setTimeout(initDashboardCharts, 50); // Initialize DataDash charts
+            setTimeout(initDashboardCharts, 50);
             break;
         case 'visitors':
             viewTitle.innerText = "Visitor Logs";
@@ -182,7 +180,7 @@ async function showView(viewId) {
         case 'reports':
             viewTitle.innerText = "System Reports";
             contentArea.innerHTML = `<div style="padding: 2rem; text-align: center;">Generating Report...</div>`;
-            const reportsHtml = await renderReports('Daily'); // Default to Daily
+            const reportsHtml = await renderReports('Daily');
             contentArea.innerHTML = reportsHtml;
             break;
         case 'attendance':
@@ -198,9 +196,7 @@ async function showView(viewId) {
 
 
 
-/**
- * Render Visitor Logs View (Filtered)
- */
+
 async function renderVisitorLogs(filter = 'All') {
     const response = await fetch('/api/visitors');
     let visitors = await response.json();
@@ -221,7 +217,7 @@ async function renderVisitorLogs(filter = 'All') {
         const membersList = JSON.parse(v.members || '[]');
         const totalPeople = 1 + membersList.length;
 
-        // Build companions list HTML (collapsed by default)
+
         let companionsHtml = '';
         if (membersList.length > 0) {
             companionsHtml = `
@@ -297,9 +293,7 @@ async function renderVisitorLogs(filter = 'All') {
     `;
 }
 
-/**
- * Render Reports View with Printing and Filtering
- */
+
 async function renderReports(filter = 'Daily') {
     const response = await fetch('/api/visitors');
     let visitors = await response.json();
@@ -307,7 +301,7 @@ async function renderReports(filter = 'Daily') {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-    // Filter logic
+
     if (filter === 'Daily') {
         visitors = visitors.filter(v => {
             const vDate = new Date(v.created_at);
@@ -431,7 +425,7 @@ async function renderReports(filter = 'Daily') {
     `;
 }
 
-// Helper to refresh report without full view switch
+
 async function refreshReport(filter) {
     const contentArea = document.getElementById('content-area');
     contentArea.innerHTML = `<div style="padding: 2rem; text-align: center;">Updating Report...</div>`;
@@ -440,9 +434,7 @@ async function refreshReport(filter) {
     lucide.createIcons();
 }
 
-/**
- * Render Payment Logs View
- */
+
 async function renderPaymentLogs() {
     const response = await fetch('/api/visitors');
     const visitors = await response.json();
@@ -492,13 +484,11 @@ async function renderPaymentLogs() {
     `;
 }
 
-/**
- * Toggle Payment Status
- */
+
 async function togglePaymentStatus(id, currentStatus) {
     const newStatus = currentStatus === 'Paid' ? 'Pending' : 'Paid';
 
-    // Using simple UI feedback since this is a quick action
+
     if (!(await showConfirm(`Change payment status for [${id}] to [${newStatus}]?`))) return;
 
     try {
@@ -509,7 +499,7 @@ async function togglePaymentStatus(id, currentStatus) {
         });
 
         if (response.ok) {
-            showView('payments'); // Refresh the view
+            showView('payments');
         } else {
             alert("Failed to update payment status.");
         }
@@ -533,7 +523,7 @@ async function initRevenueChart() {
     const response = await fetch('/api/visitors');
     const visitors = await response.json();
 
-    // Group revenue by Resort for the demo chart
+
     const resortData = {};
     visitors.forEach(v => {
         const amount = parseFloat(v.total.replace('₱', '').replace(',', ''));
@@ -593,7 +583,7 @@ async function refreshProfile() {
         const me = users.find(u => u.id == currentUser.id);
 
         if (me) {
-            // Sync local storage if data changed
+
             if (me.username !== currentUser.username || me.role !== currentUser.role) {
                 currentUser.username = me.username;
                 currentUser.role = me.role;
@@ -611,16 +601,12 @@ async function refreshProfile() {
     }
 }
 
-/**
- * Mobile Sidebar Toggle
- */
+
 function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
     sidebar.classList.toggle('show');
 }
-/**
- * View Detailed Visitor Info
- */
+
 async function viewVisitorDetails(id) {
     try {
         const response = await fetch('/api/visitors');
@@ -699,9 +685,7 @@ async function viewVisitorDetails(id) {
     }
 }
 
-/**
- * Update Visitor Status Directly
- */
+
 async function updateVisitorStatus(id, newStatus) {
     try {
         const response = await fetch('/api/visitors/status', {
@@ -712,11 +696,11 @@ async function updateVisitorStatus(id, newStatus) {
 
         if (!response.ok) throw new Error('Failed to update status');
 
-        // Success feedback
+
         const overlay = document.getElementById('details-overlay');
         if (overlay) overlay.remove();
 
-        // Refresh current view
+
         const activeNav = document.querySelector('.nav-item.active');
         const currentViewId = activeNav ? activeNav.getAttribute('onclick').match(/'([^']+)'/)[1] : 'visitors';
         showView(currentViewId);
@@ -727,9 +711,7 @@ async function updateVisitorStatus(id, newStatus) {
     }
 }
 
-/**
- * Toggle inline companion list display
- */
+
 function toggleCompanions(id) {
     const el = document.getElementById(`companions-${id}`);
     if (el) {
@@ -737,9 +719,7 @@ function toggleCompanions(id) {
     }
 }
 
-/**
- * Attendance Logic
- */
+
 let attendanceTimer = null;
 
 async function renderAttendance() {
@@ -763,7 +743,7 @@ async function renderAttendance() {
 
     const statusText = currentStatus.status === 'IN' ? 'Time In (On Duty)' : (currentStatus.status === 'BREAK' ? 'On Break' : 'Time Out');
 
-    // Safety check for display time
+
     const displayInTime = parseSQLiteDate(currentStatus.time_in);
     const formattedInTime = displayInTime ? displayInTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '---';
 
@@ -874,13 +854,11 @@ async function renderAttendance() {
     return html;
 }
 
-/**
- * Robustly parse SQLite DATETIME strings (YYYY-MM-DD HH:MM:SS) 
- */
+
 function parseSQLiteDate(sqliteDate) {
     if (!sqliteDate) return null;
     try {
-        // SQLite CURRENT_TIMESTAMP is UTC. Convert to ISO format for better browser support
+
         const isoStr = sqliteDate.replace(' ', 'T') + 'Z';
         const date = new Date(isoStr);
         return isNaN(date.getTime()) ? null : date;
@@ -909,7 +887,7 @@ function startLiveTimer(startTime, totalBreakTime, breakStart, isOnBreak) {
         if (isOnBreak && breakStart) {
             const bStart = parseSQLiteDate(breakStart);
             if (bStart) {
-                // Timer stays at the time work stopped (Shift Start to Break Start - accumulated breaks)
+
                 elapsed = (bStart.getTime() - start) - breakTotalMs;
             } else {
                 elapsed = (now - start) - breakTotalMs;
@@ -990,9 +968,7 @@ async function toggleBreak() {
     }
 }
 
-/**
- * Universal Table Filter
- */
+
 function filterTableRows(query, tableId) {
     const lowerQuery = query.toLowerCase().trim();
     const table = document.getElementById(tableId);

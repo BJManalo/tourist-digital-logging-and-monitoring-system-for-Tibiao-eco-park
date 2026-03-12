@@ -1,4 +1,4 @@
-// Shared Dashboard rendering function for DataDash style
+
 async function renderDashboard(timeFilter = 'Daily') {
     const response = await fetch('/api/visitors');
     let visitors = await response.json();
@@ -6,7 +6,7 @@ async function renderDashboard(timeFilter = 'Daily') {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-    // Apply Filter
+
     if (timeFilter === 'Daily') {
         visitors = visitors.filter(v => new Date(v.created_at) >= today);
     } else if (timeFilter === 'Weekly') {
@@ -124,7 +124,7 @@ async function renderDashboard(timeFilter = 'Daily') {
     `;
 }
 
-// Chart Initializer
+
 async function initDashboardCharts(timeFilter = 'Daily') {
     const response = await fetch('/api/visitors');
     let visitors = await response.json();
@@ -132,7 +132,7 @@ async function initDashboardCharts(timeFilter = 'Daily') {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-    // Apply filter for visual consistency with the stats cards
+
     let filteredVisitors = visitors;
     if (timeFilter === 'Daily') {
         filteredVisitors = visitors.filter(v => new Date(v.created_at) >= today);
@@ -152,14 +152,14 @@ async function initDashboardCharts(timeFilter = 'Daily') {
         });
     }
 
-    // Line Chart Data
+
     const revenueCtx = document.getElementById('dashboardRevenueChart');
     if (revenueCtx) {
         const labels = [];
         const data = [];
         const userGrowth = [];
 
-        // Logic for labels based on filter
+
         const currentDate = new Date();
         for (let i = 6; i >= 0; i--) {
             let d = new Date(currentDate);
@@ -218,11 +218,11 @@ async function initDashboardCharts(timeFilter = 'Daily') {
         });
     }
 
-    // Pie Chart Data (Destinations)
+
     const pieCtx = document.getElementById('dashboardPieChart');
     if (pieCtx) {
         const resortCounts = {};
-        // Use filtered visitors for the pie chart
+
         filteredVisitors.forEach(v => {
             if (!resortCounts[v.resort]) resortCounts[v.resort] = 0;
             resortCounts[v.resort]++;
@@ -255,11 +255,11 @@ async function refreshDashboard(filter) {
     const contentArea = document.getElementById('content-area');
     contentArea.innerHTML = `<div style="padding: 2rem; text-align: center;">Refreshing Dashboard...</div>`;
 
-    // Smooth transition
+
     const html = await renderDashboard(filter);
     contentArea.innerHTML = html;
 
-    // Re-init lucide icons and charts
+
     if (window.lucide) lucide.createIcons();
     setTimeout(() => initDashboardCharts(filter), 50);
 }

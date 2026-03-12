@@ -10,9 +10,9 @@ const PORT = process.env.PORT || 5000;
 const PUBLIC_DIR = path.join(__dirname, '../public');
 const PAGES_DIR = path.join(PUBLIC_DIR, 'assets');
 
-// Setup Postgres Pool
-// Vercel Postgres provides process.env.POSTGRES_URL 
-// Supabase might provide POSTGRES_URL or DATABASE_URL
+
+
+
 const pool = new Pool({
     connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
     ssl: {
@@ -20,20 +20,20 @@ const pool = new Pool({
     }
 });
 
-// Middleware
+
 app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static(PUBLIC_DIR));
 
-// Request Logger
+
 app.use((req, res, next) => {
     console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
     next();
 });
 
-// ==========================================================
-// Database Initialization Route (Run once by visiting /api/init-db)
-// ==========================================================
+
+
+
 app.get('/api/init-db', async (req, res) => {
     try {
         await pool.query(`
@@ -80,7 +80,7 @@ app.get('/api/init-db', async (req, res) => {
             );
         `);
 
-        // Seed admin user
+
         const adminCheck = await pool.query("SELECT COUNT(*) FROM users");
         if (parseInt(adminCheck.rows[0].count) === 0) {
             await pool.query("INSERT INTO users (username, password, role, level) VALUES ($1, $2, $3, $4)",
@@ -94,8 +94,8 @@ app.get('/api/init-db', async (req, res) => {
     }
 });
 
-// Routes
-// 1. Get all visitors
+
+
 app.get('/api/visitors', async (req, res) => {
     try {
         const { rows } = await pool.query("SELECT * FROM visitors ORDER BY created_at DESC");
@@ -103,7 +103,7 @@ app.get('/api/visitors', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// 2. Register
+
 app.post('/api/register', async (req, res) => {
     try {
         const { id, name, address, age, gender, resort, visitorType, duration, members, total, paymentStatus } = req.body;
@@ -118,7 +118,7 @@ app.post('/api/register', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// 3. Checkout visitor
+
 app.post('/api/checkout', async (req, res) => {
     try {
         const { id } = req.body;
@@ -128,7 +128,7 @@ app.post('/api/checkout', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// 4. Update donor/visitor payment status
+
 app.post('/api/visitors/payment-status', async (req, res) => {
     try {
         const { id, paymentStatus } = req.body;
@@ -138,7 +138,7 @@ app.post('/api/visitors/payment-status', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// 5. Update visitor status
+
 app.post('/api/visitors/status', async (req, res) => {
     try {
         const { id, status } = req.body;
@@ -148,7 +148,7 @@ app.post('/api/visitors/status', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// 5. User Account Management
+
 app.get('/api/users', async (req, res) => {
     try {
         const { rows } = await pool.query("SELECT id, username, role, level, created_at FROM users");
@@ -204,7 +204,7 @@ app.post('/api/login', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// 6. Attendance Routes
+
 app.post('/api/attendance/timein', async (req, res) => {
     try {
         const { userId, username, remarks } = req.body;
@@ -272,17 +272,17 @@ app.get('/api/attendance/logs', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Serve frontend pages
+
 app.get('/', (req, res) => res.sendFile(path.join(PAGES_DIR, 'index.html')));
 app.get('/index.html', (req, res) => res.sendFile(path.join(PAGES_DIR, 'index.html')));
 app.get('/login.html', (req, res) => res.sendFile(path.join(PAGES_DIR, 'login.html')));
 app.get('/staff.html', (req, res) => res.sendFile(path.join(PAGES_DIR, 'staff.html')));
 app.get('/admin.html', (req, res) => res.sendFile(path.join(PAGES_DIR, 'admin.html')));
 
-// Export for Vercel (serverless)
+
 module.exports = app;
 
-// Start server locally only when NOT on Vercel
+
 if (!process.env.VERCEL) {
     app.listen(PORT, '0.0.0.0', () => {
         console.log(`✅ Server running at http://localhost:${PORT}`);

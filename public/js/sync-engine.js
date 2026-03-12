@@ -1,26 +1,20 @@
-/**
- * SYNC ENGINE - Automatic background data synchronization
- * Handles pulling data from the Cloud (Vercel) to the Local Database (Laptop)
- */
+
 
 const CLOUD_URL = "https://tourist-digital-logging-and-monitor-three.vercel.app";
 let isSyncing = false;
 
-/**
- * Main Sync Function
- * Runs silently in the background every 10 seconds.
- */
+
 async function runCloudSync() {
     if (isSyncing) return;
 
-    // Check if we are online first
+
     if (!navigator.onLine) return;
 
     try {
         isSyncing = true;
         console.log(`[SyncEngine] Starting periodic sync with ${CLOUD_URL}...`);
 
-        // 1. Fetch data from the Cloud
+
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 15000);
 
@@ -31,7 +25,7 @@ async function runCloudSync() {
 
         const cloudVisitors = await response.json();
 
-        // 2. Save each visitor to the local database
+
         let newRecords = 0;
         for (const visitor of cloudVisitors) {
             try {
@@ -63,7 +57,7 @@ async function runCloudSync() {
 
         if (newRecords > 0) {
             console.log(`[SyncEngine] Sync Complete! Found ${newRecords} new registrations.`);
-            // Automatically refresh the dashboard if visible
+
             if (typeof showView === 'function') {
                 const activeNav = document.querySelector('.nav-item.active');
                 if (activeNav) {
@@ -83,33 +77,30 @@ async function runCloudSync() {
     }
 }
 
-/**
- * INITIALIZE AUTO-SYNC
- * Runs every 10 seconds
- */
+
 function initAutoSync() {
-    // Initial sync on load
+
     setTimeout(runCloudSync, 1000);
 
-    // Set interval for every 10 seconds
+
     setInterval(() => {
         if (document.visibilityState === 'visible') {
             runCloudSync();
         }
     }, 10000);
 
-    // Also sync when the user returns to the tab
+
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
             runCloudSync();
         }
     });
 
-    // Dummy function to prevent errors if any old code calls it
+
     window.syncCloudData = () => { console.log("Manual sync button removed. System syncs automatically every 10s.") };
 }
 
-// Start auto-sync on load
+
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initAutoSync);
 } else {

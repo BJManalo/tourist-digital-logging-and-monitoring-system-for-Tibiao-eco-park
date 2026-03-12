@@ -5,9 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DIGITAL VISITOR'S LOGGING AND MONITORING SYSTEM</title>
-    <!-- Montserrat and Inter fonts -->
+    
     <link rel="stylesheet" href="css/fonts.css">
-    <!-- Lucide Icons -->
+    
     <script src="js/vendor/lucide.js"></script>
     <script src="js/vendor/html5-qrcode.js"></script>
     <link rel="stylesheet" href="css/style.css">
@@ -16,7 +16,7 @@
 <body>
     <div class="app-container">
 
-        <!-- 0. LANDING SCREEN -->
+        
         <section id="landing-screen" class="fade-in">
             <div class="landing-content">
                 <div class="logo-container">
@@ -50,7 +50,7 @@
             </div>
         </section>
 
-        <!-- 1. SCAN SCREEN -->
+        
         <section id="scan-screen" class="hidden fade-in">
             <header class="app-header">
                 <button class="header-back" onclick="stopQRScanner(); navigateTo('landing-screen')">
@@ -68,7 +68,7 @@
 
         </section>
 
-        <!-- 1.5 CHECKOUT SCREEN -->
+        
         <section id="checkout-screen" class="hidden fade-in">
             <header class="app-header">
                 <button class="header-back" onclick="navigateTo('landing-screen')">
@@ -97,7 +97,7 @@
             </div>
         </section>
 
-        <!-- 2. WELCOME SCREEN -->
+        
         <section id="welcome-screen" class="hidden fade-in">
             <div class="logo-container">
                 <img src="images/logo.png" alt="Logo" class="app-logo">
@@ -120,7 +120,7 @@
             </div>
         </section>
 
-        <!-- 3. REGISTRATION SCREEN -->
+        
         <section id="registration-screen" class="hidden fade-in">
             <header class="app-header">
                 <button class="header-back" onclick="navigateTo('welcome-screen')">
@@ -145,7 +145,7 @@
                 </div>
 
                 <form id="tourist-form">
-                    <!-- Basic Info -->
+                    
                     <div class="form-group">
                         <label for="name">Full Name *</label>
                         <input type="text" id="name" placeholder="Juan Dela Cruz" required>
@@ -182,7 +182,7 @@
                         </select>
                     </div>
 
-                    <!-- Destination Info -->
+                    
                     <div class="form-group">
                         <label for="resort">Destination Resort *</label>
                         <select id="resort" onchange="toggleOtherResort()" required>
@@ -219,11 +219,11 @@
                         </select>
                     </div>
 
-                    <!-- Additional Members Section -->
+                    
                     <div class="members-section">
                         <h3 style="font-size: 1.1rem; margin-bottom: 1rem; color: var(--dark);">Companion / Members</h3>
                         <div id="members-list">
-                            <!-- Members will be added here -->
+                            
                         </div>
 
                         <button type="button" class="add-member-btn" id="add-member">
@@ -241,7 +241,7 @@
             </div>
         </section>
 
-        <!-- 3.5 PREVIEW SCREEN -->
+        
         <section id="preview-screen" class="hidden fade-in">
             <header class="app-header">
                 <button class="header-back" onclick="navigateTo('registration-screen')">
@@ -257,7 +257,7 @@
                     <div class="step-dot active"></div>
                 </div>
 
-                <!-- Premium Payment Record Card -->
+                
                 <div id="premium-payment-card"
                     style="background: #f8fbff; border-radius: 24px; border: 1px solid #e2e8f0; padding: 1.75rem; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); margin-bottom: 2rem;">
                     <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 1.5rem;">
@@ -272,7 +272,7 @@
 
                     <div id="preview-items-list"
                         style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 1.5rem;">
-                        <!-- Items will be injected here -->
+                        
                     </div>
 
                     <div style="border-top: 2px dashed #cbd5e1; margin-bottom: 1.5rem; opacity: 0.5;"></div>
@@ -303,7 +303,7 @@
             </div>
         </section>
 
-        <!-- 4. SUCCESS SCREEN -->
+        
         <section id="success-screen" class="hidden fade-in"
             style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; text-align: center;">
             <div
@@ -315,7 +315,7 @@
                 proceed to the cashier for payment.</p>
 
             <div id="summary-card" class="payment-summary" style="width: 100%; text-align: left;">
-                <!-- Summary content will be injected here -->
+                
             </div>
 
             <div class="id-badge">

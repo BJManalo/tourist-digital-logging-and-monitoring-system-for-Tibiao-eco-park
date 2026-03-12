@@ -1,59 +1,52 @@
-/**
- * Tibiao Tourism System - Application Logic
- */
 
-// Configuration
-// Configuration
+
+
+
 const FEES = {
     'Domestic Local': 20,
     'Domestic National': 50,
     'Foreigner': 50
 };
-const DISCOUNT_RATE = 0.20; // 20% discount
+const DISCOUNT_RATE = 0.20;
 
-// Global Scanner Variable
+
 let html5QrCode = null;
 
-// Current Screen State
+
 let currentScreen = 'landing-screen';
 let lastFormData = null;
 
-/**
- * Navigate to a different screen
- * @param {string} screenId 
- */
+
 function navigateTo(screenId) {
-    // Hide all screens
+
     document.querySelectorAll('section').forEach(section => {
         section.classList.add('hidden');
     });
 
-    // Show the target screen
+
     const targetScreen = document.getElementById(screenId);
     if (targetScreen) {
         targetScreen.classList.remove('hidden');
         currentScreen = screenId;
     }
 
-    // Special behavior for welcome screen - pure primary background
+
     if (screenId === 'welcome-screen') {
         document.querySelector('.app-container').style.backgroundColor = 'var(--primary)';
     } else {
         document.querySelector('.app-container').style.backgroundColor = 'var(--white)';
     }
 
-    // Refresh icons
+
     if (window.lucide) {
         lucide.createIcons();
     }
 
-    // Scroll to top
+
     window.scrollTo(0, 0);
 }
 
-/**
- * Initialize and start the QR Scanner
- */
+
 function startQRScanner() {
     navigateTo('scan-screen');
 
@@ -66,10 +59,10 @@ function startQRScanner() {
 
     const config = { fps: 15, qrbox: { width: 250, height: 250 } };
 
-    // Try starting with environment (rear camera) first, fallback to front camera
+
     html5QrCode.start({ facingMode: "environment" }, config, qrCodeSuccessCallback)
         .catch(err => {
-            // Fallback to front camera if rear is not available
+
             html5QrCode.start({ facingMode: "user" }, config, qrCodeSuccessCallback)
                 .catch(err2 => {
                     console.error(err2);
@@ -79,9 +72,7 @@ function startQRScanner() {
         });
 }
 
-/**
- * Stop the QR Scanner
- */
+
 function stopQRScanner() {
     if (html5QrCode && html5QrCode.isScanning) {
         html5QrCode.stop().then(() => {
@@ -90,22 +81,18 @@ function stopQRScanner() {
     }
 }
 
-/**
- * Demo simulation for environment without camera
- */
+
 function simulateScan() {
     stopQRScanner();
     navigateTo('welcome-screen');
 }
 
-/**
- * Add a new member field to the list
- */
+
 function addMember() {
     const list = document.getElementById('members-list');
     const memberId = 'member-' + Date.now();
 
-    // Default to the current primary visitor type
+
     const defaultType = document.getElementById('visitor-type').value || 'Domestic Local';
 
     const memberCard = document.createElement('div');
@@ -152,10 +139,7 @@ function addMember() {
     }
 }
 
-/**
- * Remove a member from the list
- * @param {string} memberId 
- */
+
 function removeMember(memberId) {
     const member = document.getElementById(memberId);
     if (member) {
@@ -166,10 +150,7 @@ function removeMember(memberId) {
     }
 }
 
-/**
- * Calculate total payment based on inputs
- * Returns the final total string (e.g. "₱100.00")
- */
+
 function calculateTotalValue() {
     const primaryAgeInput = document.getElementById('age').value;
     const primaryStatus = document.getElementById('status').value;
@@ -178,7 +159,7 @@ function calculateTotalValue() {
     const primaryAge = parseInt(primaryAgeInput) || 0;
     let total = 0;
 
-    // 1. Calculate for Primary Visitor
+
     const isPrimaryDiscounted = primaryStatus !== 'Regular' || primaryAge < 13 || primaryAge >= 60;
     const finalPrimaryStatus = isPrimaryDiscounted && primaryStatus === 'Regular'
         ? (primaryAge < 13 ? 'Child' : 'Senior Citizen')
@@ -188,7 +169,7 @@ function calculateTotalValue() {
     const primaryCost = (finalPrimaryStatus !== 'Regular') ? baseFee * (1 - DISCOUNT_RATE) : baseFee;
     total += primaryCost;
 
-    // 2. Calculate for Additional Members
+
     const memberCards = document.querySelectorAll('.member-card');
     memberCards.forEach((card, index) => {
         const status = card.querySelector('.member-status-input').value;
@@ -208,22 +189,20 @@ function calculateTotalValue() {
     return `₱${total.toFixed(2)}`;
 }
 
-/**
- * Render the full preview in the PREVIEW SCREEN
- */
+
 function renderPreview(formData) {
     const list = document.getElementById('preview-items-list');
     const totalEl = document.getElementById('preview-total-amount');
     list.innerHTML = '';
 
-    // Primary Visitor Row
+
     const primaryRow = document.createElement('div');
     primaryRow.style.display = 'flex';
     primaryRow.style.justifyContent = 'space-between';
     primaryRow.style.fontSize = '1.05rem';
     primaryRow.style.color = '#1e293b';
 
-    // Calculate Primary Fee for display
+
     const isDiscounted = formData.status_display !== 'Regular';
     const baseFee = FEES[formData.visitorType] || 50;
     const cost = isDiscounted ? baseFee * (1 - DISCOUNT_RATE) : baseFee;
@@ -234,7 +213,7 @@ function renderPreview(formData) {
     `;
     list.appendChild(primaryRow);
 
-    // Member Rows
+
     formData.members.forEach(m => {
         const row = document.createElement('div');
         row.style.display = 'flex';
@@ -258,9 +237,7 @@ function renderPreview(formData) {
     if (window.lucide) lucide.createIcons();
 }
 
-/**
- * Show/hide the manual destination input when "Others" is selected
- */
+
 function toggleOtherResort() {
     const resortSelect = document.getElementById('resort');
     const otherGroup = document.getElementById('resort-other-group');
@@ -275,13 +252,11 @@ function toggleOtherResort() {
     }
 }
 
-/**
- * Handle form submission
- */
+
 document.getElementById('tourist-form').addEventListener('submit', function (e) {
     e.preventDefault();
 
-    // Gather Detailed Data
+
     const memberData = [];
     document.querySelectorAll('.member-card').forEach((card, index) => {
         const status = card.querySelector('.member-status-input').value;
@@ -320,22 +295,20 @@ document.getElementById('tourist-form').addEventListener('submit', function (e) 
         status: 'Active'
     };
 
-    // Show Preview Instead of Submitting
+
     renderPreview(lastFormData);
     navigateTo('preview-screen');
 });
 
-/**
- * Final step: Submit to server
- */
+
 function confirmRegistration() {
     if (!lastFormData) return;
 
-    // Generate Unique ID just before final submission
+
     const visitorId = `TIB-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
     lastFormData.id = visitorId;
 
-    // 1. Save to SQLite Database via API
+
     fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -361,7 +334,7 @@ function confirmRegistration() {
             console.log("Saving offline...");
             alert("⚠️ No connection to server detected. Saving registration OFFLINE on this device.");
 
-            // Queue for later sync if needed
+
             let queue = JSON.parse(localStorage.getItem('offline_register_queue') || '[]');
             queue.push(lastFormData);
             localStorage.setItem('offline_register_queue', JSON.stringify(queue));
@@ -372,12 +345,12 @@ function confirmRegistration() {
 
 
 function saveToLocalAndShowSuccess(formData, visitorId) {
-    // Local Storage Sync (Optional fallback)
+
     let visitors = JSON.parse(localStorage.getItem('tibiao_visitors') || '[]');
     visitors.push(formData);
     localStorage.setItem('tibiao_visitors', JSON.stringify(visitors));
 
-    // Update Success Summary UI
+
     document.getElementById('generated-id').innerText = visitorId;
     const summaryCard = document.getElementById('summary-card');
     summaryCard.innerHTML = `
@@ -394,16 +367,14 @@ function saveToLocalAndShowSuccess(formData, visitorId) {
     navigateTo('success-screen');
 }
 
-/**
- * Copy Registration ID to clipboard
- */
+
 function copyID() {
     const idText = document.getElementById('generated-id').innerText;
     navigator.clipboard.writeText(idText).then(() => {
         const copyBtn = document.querySelector('.copy-btn');
         const originalHTML = copyBtn.innerHTML;
 
-        // Visual feedback
+
         copyBtn.innerHTML = '<i data-lucide="check" style="width: 18px; height: 18px; color: #10b981;"></i>';
         if (window.lucide) lucide.createIcons();
 
@@ -416,9 +387,7 @@ function copyID() {
     });
 }
 
-/**
- * Handle Visitor Checkout
- */
+
 function processCheckout() {
     const idInput = document.getElementById('checkout-id').value.toUpperCase().trim();
     if (!idInput) {
@@ -426,7 +395,7 @@ function processCheckout() {
         return;
     }
 
-    // 1. Update SQLite Database
+
     fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -442,7 +411,7 @@ function processCheckout() {
         .catch(error => {
             console.error('Network Error during checkout:', error);
 
-            // Queue for offline sync
+
             let queue = JSON.parse(localStorage.getItem('offline_checkout_queue') || '[]');
             queue.push(idInput);
             localStorage.setItem('offline_checkout_queue', JSON.stringify(queue));
@@ -453,7 +422,7 @@ function processCheckout() {
 }
 
 function handleSuccessfulCheckout(idInput) {
-    // 2. Sync LocalStorage for consistency
+
     let visitors = JSON.parse(localStorage.getItem('tibiao_visitors') || '[]');
     const visitorIndex = visitors.findIndex(v => v.id === idInput);
     if (visitorIndex !== -1) {
@@ -466,19 +435,19 @@ function handleSuccessfulCheckout(idInput) {
     document.getElementById('checkout-id').value = '';
 }
 
-// Event Listeners
+
 document.getElementById('add-member').addEventListener('click', addMember);
 
-// Initial calculation
-// No longer needed real-time
 
-// Check if URL suggests direct navigation to registration (for QR scans)
+
+
+
 document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('register') === 'true' || window.location.hash === '#registration-screen') {
         navigateTo('registration-screen');
     } else if (window.location.hash) {
-        // Fallback for other direct navigation
+
         const target = window.location.hash.substring(1);
         if (document.getElementById(target)) {
             navigateTo(target);

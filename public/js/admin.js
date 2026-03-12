@@ -1,7 +1,7 @@
 let currentAdmin = null;
 let editingUserId = null;
 
-// Global Alert Replacement
+
 window.alert = function (message) {
     showAlert(message);
 };
@@ -74,19 +74,19 @@ function showConfirm(message) {
 document.addEventListener('DOMContentLoaded', () => {
     lucide.createIcons();
 
-    // Unified Login Check
+
     const storedUser = localStorage.getItem('currentUser');
     if (storedUser) {
         currentAdmin = JSON.parse(storedUser);
 
-        // Final verify for admin role
+
         if (currentAdmin.level !== 'admin') {
             alert("Unauthorized access. Admin portal only.");
             window.location.href = 'login.html';
             return;
         }
 
-        // Hide login and show dashboard
+
         const loginScreen = document.getElementById('login-screen');
         const dashboard = document.getElementById('dashboard-layout');
 
@@ -100,14 +100,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-/**
- * Handle Sidebar Navigation
- */
+
 async function showView(viewId) {
     const contentArea = document.getElementById('content-area');
     const viewTitle = document.getElementById('view-title');
 
-    // Update Sidebar Active State
+
     document.querySelectorAll('.nav-item').forEach(item => {
         item.classList.remove('active');
         if (item.getAttribute('onclick')?.includes(viewId)) {
@@ -115,25 +113,25 @@ async function showView(viewId) {
         }
     });
 
-    // Close sidebar on mobile
+
     const sidebar = document.getElementById('sidebar');
     if (sidebar && window.innerWidth <= 1024) {
         sidebar.classList.remove('show');
     }
 
-    // Show/Hide Header Back Button
+
     const backBtn = document.getElementById('back-btn-header');
     if (backBtn) {
         const subViews = ['visitors-active', 'visitors-out'];
         backBtn.style.display = subViews.includes(viewId) ? 'flex' : 'none';
     }
 
-    // View Routing
+
     switch (viewId) {
         case 'dashboard':
             viewTitle.innerText = "System Overview";
             contentArea.innerHTML = await renderDashboard();
-            setTimeout(initDashboardCharts, 50); // Initialize DataDash charts
+            setTimeout(initDashboardCharts, 50);
             break;
         case 'visitors':
             viewTitle.innerText = "Global Visitor Logs";
@@ -176,7 +174,7 @@ async function showView(viewId) {
 
 
 
-/** VISITOR LOGS **/
+
 async function renderVisitorLogs(filter = 'All') {
     const response = await fetch('/api/visitors');
     let visitors = await response.json();
@@ -187,7 +185,7 @@ async function renderVisitorLogs(filter = 'All') {
 
     let rows = visitors.map(v => {
         const membersList = JSON.parse(v.members || '[]');
-        // Build companions list HTML (collapsed by default)
+
         let companionsHtml = '';
         if (membersList.length > 0) {
             companionsHtml = `
@@ -249,7 +247,7 @@ async function renderVisitorLogs(filter = 'All') {
     `;
 }
 
-/** FULL REPORTING MODULE **/
+
 async function renderReports(filter = 'Daily') {
     const response = await fetch('/api/visitors');
     let visitors = await response.json();
@@ -274,7 +272,7 @@ async function renderReports(filter = 'Daily') {
     let totalRevenue = 0;
     let totalHeadcount = 0;
 
-    // Fetch latest account data to ensure "Authenticated By" is current
+
     const usersResponse = await fetch('/api/users');
     const allUsers = await usersResponse.json();
     const activeAdmin = allUsers.find(u => u.id === currentAdmin.id) || currentAdmin;
@@ -286,7 +284,7 @@ async function renderReports(filter = 'Daily') {
         const size = 1 + members.length;
         totalHeadcount += size;
 
-        // Generate names of companions if any
+
         let companionInfo = '';
         if (members.length > 0) {
             companionInfo = `
@@ -408,7 +406,7 @@ async function renderReports(filter = 'Daily') {
             }
 
             @media print {
-                /* FORCE PARENTS TO ALLOW MULTI-PAGE */
+                
                 html, body, .dashboard-container, .main-content, #content-area, .report-wrapper {
                     height: auto !important;
                     overflow: visible !important;
@@ -418,7 +416,7 @@ async function renderReports(filter = 'Daily') {
                 .print-footer { display: flex !important; position: relative !important; page-break-before: auto; }
                 .printable-area { border: none !important; box-shadow: none !important; padding: 0 !important; display: block !important; }
                 
-                /* Table styling for print */
+                
                 thead { display: table-header-group; }
                 tr { page-break-inside: avoid; }
                 .executive-summary { page-break-inside: avoid; margin-top: 20px; display: grid !important; grid-template-columns: repeat(3, 1fr) !important; }
@@ -440,7 +438,7 @@ async function refreshReport(filter) {
     lucide.createIcons();
 }
 
-/** PAYMENT LOGS **/
+
 async function renderPaymentLogs() {
     const response = await fetch('/api/visitors');
     const visitors = await response.json();
@@ -496,9 +494,7 @@ async function renderPaymentLogs() {
     `;
 }
 
-/**
- * Toggle Payment Status (Admin)
- */
+
 async function togglePaymentStatus(id, currentStatus) {
     const newStatus = currentStatus === 'Paid' ? 'Pending' : 'Paid';
     if (!(await showConfirm(`Change payment status for [${id}] to [${newStatus}]?`))) return;
@@ -511,7 +507,7 @@ async function togglePaymentStatus(id, currentStatus) {
         });
 
         if (response.ok) {
-            showView('payments'); // Refresh the view
+            showView('payments');
         } else {
             alert("Failed to update payment status.");
         }
@@ -520,7 +516,7 @@ async function togglePaymentStatus(id, currentStatus) {
     }
 }
 
-/** ACCOUNT MANAGEMENT **/
+
 async function renderAccountsView() {
     const response = await fetch('/api/users');
     const users = await response.json();
@@ -636,7 +632,7 @@ async function createUserAccount() {
         if (response.ok) {
             alert(editingUserId ? "Account updated successfully!" : "Account provisioned successfully!");
 
-            // If editing own account, update session data
+
             if (editingUserId && editingUserId == currentAdmin.id) {
                 currentAdmin.username = username;
                 currentAdmin.role = role;
@@ -667,7 +663,7 @@ function editUser(user) {
     document.getElementById('new-password').placeholder = "Leave blank to keep current";
     document.getElementById('new-password').required = false;
 
-    // Update form visuals for edit mode
+
     card.querySelector('h3').innerText = "Update Account Details";
     card.querySelector('.account-submit-btn').innerText = "Update User Account";
 
@@ -716,7 +712,7 @@ async function refreshProfile() {
         const me = users.find(u => u.id == currentAdmin.id);
 
         if (me) {
-            // Sync local storage if data changed
+
             if (me.username !== currentAdmin.username || me.role !== currentAdmin.role) {
                 currentAdmin.username = me.username;
                 currentAdmin.role = me.role;
@@ -749,7 +745,7 @@ async function initRevenueChart() {
     const response = await fetch('/api/visitors');
     const visitors = await response.json();
 
-    // Group revenue by Resort for the demo chart
+
     const resortData = {};
     visitors.forEach(v => {
         const amount = parseFloat(v.total.replace('₱', '').replace(',', ''));
@@ -783,7 +779,7 @@ async function initRevenueChart() {
     });
 }
 
-/** ATTENDANCE LOGS **/
+
 async function renderAttendanceLogs() {
     const response = await fetch('/api/attendance/logs');
     const logs = await response.json();
@@ -856,9 +852,7 @@ async function renderAttendanceLogs() {
     `;
 }
 
-/**
- * Toggle inline companion list display
- */
+
 function toggleCompanions(id) {
     const el = document.getElementById(`companions-${id}`);
     if (el) {
@@ -867,9 +861,7 @@ function toggleCompanions(id) {
 }
 
 
-/**
- * Universal Table Filter
- */
+
 function filterTableRows(query, tableId) {
     const lowerQuery = query.toLowerCase().trim();
     const table = document.getElementById(tableId);
