@@ -169,7 +169,7 @@ async function showView(viewId) {
             contentArea.innerHTML = outHtml;
             break;
         case 'revenue':
-            viewTitle.innerText = "Revenue Analytics";
+            viewTitle.innerText = "Collection Fee Analytics";
             contentArea.innerHTML = renderRevenueGraph();
             await initRevenueChart();
             break;
@@ -221,20 +221,32 @@ async function renderVisitorLogs(filter = 'All') {
         const membersList = JSON.parse(v.members || '[]');
         const totalPeople = 1 + membersList.length;
 
-        // Build companions list HTML
+        // Build companions list HTML (collapsed by default)
         let companionsHtml = '';
         if (membersList.length > 0) {
-            companionsHtml = `<div style="font-size: 0.75rem; color: #64748b; margin-top: 4px; padding-left: 8px; border-left: 2px solid #e2e8f0;">
-                <div style="font-weight: 700; font-size: 0.65rem; text-transform: uppercase; color: #94a3b8; margin-bottom: 2px;">Companions:</div>
-                ${membersList.map(m => `<div>• ${m.name} (${m.age}) — <span style="color:#6366f1; font-weight:600;">${m.visitorType || 'N/A'}</span></div>`).join('')}
-            </div>`;
+            companionsHtml = `
+                <div id="companions-${v.id}" style="display: none; font-size: 0.75rem; color: #64748b; margin-top: 8px; padding-left: 12px; border-left: 2px solid var(--primary); animation: fadeIn 0.2s ease;">
+                    <div style="font-weight: 700; font-size: 0.65rem; text-transform: uppercase; color: #94a3b8; margin-bottom: 4px; letter-spacing: 0.5px;">Companions:</div>
+                    ${membersList.map(m => `
+                        <div style="margin-bottom: 3px; display: flex; align-items: center; gap: 6px;">
+                            <span style="color: var(--primary); font-size: 0.4rem;">●</span>
+                            <span style="font-weight: 600; color: #475569;">${m.name}</span>
+                            <span style="color: #94a3b8; font-size: 0.7rem;">(${m.age}) — <span style="color:#6366f1">${m.visitorType}</span></span>
+                        </div>
+                    `).join('')}
+                </div>`;
         }
 
         rows += `
             <tr>
                 <td style="font-weight: 700; color: #64748b; font-size: 0.75rem;">${v.id}</td>
                 <td>
-                    <div style="font-weight: 700;">${v.name}</div>
+                    <div style="font-weight: 700; color: ${membersList.length > 0 ? 'var(--primary)' : 'var(--text-main)'}; cursor: ${membersList.length > 0 ? 'pointer' : 'default'}; display: inline-block; transition: all 0.2s;" 
+                         ${membersList.length > 0 ? `onclick="toggleCompanions('${v.id}')"` : ''}
+                         ${membersList.length > 0 ? `onmouseover="this.style.textDecoration='underline'; this.style.opacity='0.8'"` : ''} 
+                         onmouseout="this.style.textDecoration='none'; this.style.opacity='1'">
+                        ${v.name}
+                    </div>
                     ${companionsHtml}
                 </td>
                 <td>${v.resort}</td>
@@ -242,10 +254,10 @@ async function renderVisitorLogs(filter = 'All') {
                 <td><span style="font-weight: 600; color: #059669;">${v.total}</span></td>
                 <td><span class="badge ${statusClass}">${v.status}</span></td>
                 <td style="text-align: center;">
-                    <button class="btn" onclick="toggleStatus('${v.id}', '${v.status}')" 
+                    <button class="btn" onclick="viewVisitorDetails('${v.id}')" 
                         style="padding: 6px; background: #f1f5f9; color: #64748b; border-radius: 8px; border: 1px solid #e2e8f0; cursor: pointer; transition: all 0.2s;"
-                        title="Toggle Status">
-                        <i data-lucide="edit-3" style="width: 16px; height: 16px;"></i>
+                        title="View Details">
+                        <i data-lucide="eye" style="width: 16px; height: 16px;"></i>
                     </button>
                 </td>
             </tr>
@@ -384,7 +396,7 @@ async function renderReports(filter = 'Daily') {
                     <div style="font-size: 1.5rem; font-weight: 800; color: #3b82f6;">${totalHeadcount}</div>
                 </div>
                 <div style="background: #f8fafc; padding: 1.5rem; border-radius: 12px; border: 1px solid #e2e8f0;">
-                    <div style="font-size: 0.75rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Total Revenue</div>
+                    <div style="font-size: 0.75rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Total Collection Fee</div>
                     <div style="font-size: 1.5rem; font-weight: 800; color: #10b981;">₱${totalRevenue.toLocaleString()}</div>
                 </div>
             </div>
@@ -450,28 +462,18 @@ async function renderPaymentLogs() {
                 <td>${v.resort}</td>
                 <td><span style="color: #64748b;">${date}</span></td>
                 <td><span style="font-weight: 700; color: #059669; font-size: 1.1rem;">${v.total}</span></td>
-                <td><span class="badge" style="${badgeColor}">${pStatus.toUpperCase()}</span></td>
-                <td style="text-align: center;">
-                    <button class="btn" onclick="togglePaymentStatus('${v.id}', '${pStatus}')" 
-                        style="padding: 6px; background: #f1f5f9; color: #64748b; border-radius: 8px; border: 1px solid #e2e8f0; cursor: pointer; transition: all 0.2s;"
-                        title="Toggle Payment Status">
-                        <i data-lucide="edit-3" style="width: 16px; height: 16px;"></i>
-                    </button>
-                </td>
             </tr>
         `;
     });
 
     return `
         <div class="table-container fade-in">
-            <h3 style="font-family: 'Montserrat'; margin-bottom: 0.5rem; font-size: 1.1rem;">Transaction History</h3>
-            <div style="margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 20px;">
-                 <p style="font-size: 0.8rem; color: #64748b;">Use the <i data-lucide="edit-3" style="width:12px; vertical-align:middle;"></i> icon to toggle between <span style="color:#166534;font-weight:700;">PAID</span> and <span style="color:#92400e;font-weight:700;">PENDING</span>.</p>
-                 
-                 <div style="position: relative; flex: 1; max-width: 300px;">
+            <div style="margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; gap: 20px;">
+                <h3 style="font-family: 'Montserrat'; font-size: 1.1rem; margin: 0;">Transaction History</h3>
+                <div style="position: relative; flex: 1; max-width: 300px;">
                     <i data-lucide="search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; color: #94a3b8;"></i>
                     <input type="text" placeholder="Search transactions..." oninput="filterTableRows(this.value, 'payment-table')" 
-                        style="width: 100%; padding: 0.6rem 0.6rem 0.6rem 2.5rem; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 0.85rem; outline: none; transition: all 0.2s; background: #f8fafc;">
+                        style="width: 100%; padding: 0.5rem 0.5rem 0.5rem 2.5rem; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 0.85rem; outline: none; transition: all 0.2s; background: #f8fafc;">
                 </div>
             </div>
             <table class="data-table" id="payment-table">
@@ -482,8 +484,6 @@ async function renderPaymentLogs() {
                         <th>DESTINATION</th>
                         <th>DATE</th>
                         <th>AMOUNT PAID</th>
-                        <th>STATUS</th>
-                        <th style="text-align: center;">ACTIONS</th>
                     </tr>
                 </thead>
                 <tbody>${rows}</tbody>
@@ -521,7 +521,7 @@ async function togglePaymentStatus(id, currentStatus) {
 function renderRevenueGraph() {
     return `
         <div class="table-container fade-in">
-            <h3 style="font-family: 'Montserrat'; margin-bottom: 2rem;">Revenue Overview (Daily Trend)</h3>
+            <h3 style="font-family: 'Montserrat'; margin-bottom: 2rem;">Collection Fee Overview (Daily Trend)</h3>
             <div style="height: 400px;">
                 <canvas id="revenueChart"></canvas>
             </div>
@@ -546,7 +546,7 @@ async function initRevenueChart() {
         data: {
             labels: Object.keys(resortData).length > 0 ? Object.keys(resortData) : ['Calawag', 'BlueWave', 'Campolly'],
             datasets: [{
-                label: 'Revenue by Destination (₱)',
+                label: 'Collection Fee by Destination (₱)',
                 data: Object.values(resortData).length > 0 ? Object.values(resortData) : [0, 0, 0],
                 backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#6366f1'],
                 borderRadius: 8,
@@ -619,14 +619,90 @@ function toggleSidebar() {
     sidebar.classList.toggle('show');
 }
 /**
- * Toggle Visitor Status (Active <-> Checked Out)
+ * View Detailed Visitor Info
  */
-async function toggleStatus(id, currentStatus) {
-    const newStatus = currentStatus === 'Active' ? 'Checked Out' : 'Active';
-    const confirmMsg = `Change status of <strong>${id}</strong> to <strong>${newStatus}</strong>?`;
+async function viewVisitorDetails(id) {
+    try {
+        const response = await fetch('/api/visitors');
+        const visitors = await response.json();
+        const v = visitors.find(v => v.id === id);
+        if (!v) return;
 
-    if (!(await showConfirm(confirmMsg))) return;
+        const membersList = JSON.parse(v.members || '[]');
 
+        const detailsHtml = `
+            <div class="custom-alert-overlay show" id="details-overlay">
+                <div class="custom-alert-card" style="max-width: 500px; text-align: left; padding: 2.5rem;">
+                    <h3 style="margin-bottom: 2rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; font-family: 'Montserrat'; font-weight: 800; font-size: 1.25rem;">
+                        Visitor Profile
+                        <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">Ref: ${v.id}</span>
+                    </h3>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+                        <div>
+                            <label style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; font-weight: 800; letter-spacing: 1px;">Primary Visitor</label>
+                            <div style="font-weight: 700; color: var(--text-main); font-size: 1.1rem;">${v.name}</div>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; font-weight: 800; letter-spacing: 1px;">Destination</label>
+                            <div style="font-weight: 700; color: var(--text-main); font-size: 1.1rem;">${v.resort}</div>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; font-weight: 800; letter-spacing: 1px;">Total Paid</label>
+                            <div style="font-weight: 800; color: var(--success); font-size: 1.25rem;">${v.total}</div>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; font-weight: 800; letter-spacing: 1px;">Visit Date</label>
+                            <div style="font-weight: 600; color: var(--text-main);">${new Date(v.created_at).toLocaleDateString()}</div>
+                        </div>
+                    </div>
+
+                    <label style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; font-weight: 800; letter-spacing: 1px; margin-bottom: 0.75rem; display: block;">Companions (${membersList.length})</label>
+                    <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 16px; margin-bottom: 2rem; max-height: 180px; overflow-y: auto; border: 1px solid var(--border-color);">
+                        ${membersList.length > 0 ? membersList.map(m => `
+                            <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding: 8px 0; align-items: center;">
+                                <span style="font-size:0.9rem; font-weight: 600; color: var(--text-main);">${m.name}</span>
+                                <span style="font-size:0.75rem; color:var(--text-muted); background: rgba(255,255,255,0.05); padding: 2px 8px; border-radius: 6px;">${m.age} • ${m.visitorType}</span>
+                            </div>
+                        `).join('') : '<div style="color:var(--text-muted); font-size: 0.85rem; text-align: center; padding: 1rem;">No companions registered.</div>'}
+                    </div>
+
+                    <div style="margin-bottom: 2.5rem;">
+                        <label style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; font-weight: 800; letter-spacing: 1px; margin-bottom: 0.75rem; display: block;">Update Visit Status</label>
+                        <div style="display: flex; gap: 12px;">
+                            <button onclick="updateVisitorStatus('${v.id}', 'Active')" 
+                                style="flex: 1; padding: 1rem; border-radius: 14px; border: 2px solid ${v.status === 'Active' ? 'var(--success)' : 'var(--border-color)'}; background: ${v.status === 'Active' ? 'rgba(16, 185, 129, 0.1)' : 'transparent'}; color: ${v.status === 'Active' ? 'var(--success)' : 'var(--text-muted)'}; cursor: pointer; font-weight: 800; font-size: 0.8rem; transition: all 0.2s;">
+                                ACTIVE
+                            </button>
+                            <button onclick="updateVisitorStatus('${v.id}', 'Checked Out')" 
+                                style="flex: 1; padding: 1rem; border-radius: 14px; border: 2px solid ${v.status === 'Checked Out' ? 'var(--danger)' : 'var(--border-color)'}; background: ${v.status === 'Checked Out' ? 'rgba(239, 68, 68, 0.1)' : 'transparent'}; color: ${v.status === 'Checked Out' ? 'var(--danger)' : 'var(--text-muted)'}; cursor: pointer; font-weight: 800; font-size: 0.8rem; transition: all 0.2s;">
+                                CHECKED OUT
+                            </button>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: center;">
+                        <button class="custom-alert-btn custom-alert-btn-secondary" style="width: 100%;" onclick="document.getElementById('details-overlay').remove()">Close Profile</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        const existing = document.getElementById('details-overlay');
+        if (existing) existing.remove();
+        document.body.insertAdjacentHTML('beforeend', detailsHtml);
+        if (window.lucide) lucide.createIcons();
+
+    } catch (err) {
+        console.error('Error loading details:', err);
+        alert('Failed to load visitor details.');
+    }
+}
+
+/**
+ * Update Visitor Status Directly
+ */
+async function updateVisitorStatus(id, newStatus) {
     try {
         const response = await fetch('/api/visitors/status', {
             method: 'POST',
@@ -636,15 +712,28 @@ async function toggleStatus(id, currentStatus) {
 
         if (!response.ok) throw new Error('Failed to update status');
 
-        const result = await response.json();
-        console.log(result.message);
+        // Success feedback
+        const overlay = document.getElementById('details-overlay');
+        if (overlay) overlay.remove();
 
         // Refresh current view
-        const currentViewId = document.querySelector('.nav-item.active').getAttribute('onclick').match(/'([^']+)'/)[1];
+        const activeNav = document.querySelector('.nav-item.active');
+        const currentViewId = activeNav ? activeNav.getAttribute('onclick').match(/'([^']+)'/)[1] : 'visitors';
         showView(currentViewId);
+
     } catch (error) {
         console.error('Error updating status:', error);
         alert('Error: ' + error.message);
+    }
+}
+
+/**
+ * Toggle inline companion list display
+ */
+function toggleCompanions(id) {
+    const el = document.getElementById(`companions-${id}`);
+    if (el) {
+        el.style.display = el.style.display === 'none' ? 'block' : 'none';
     }
 }
 

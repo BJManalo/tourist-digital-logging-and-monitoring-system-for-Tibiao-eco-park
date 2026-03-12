@@ -16,6 +16,7 @@ let html5QrCode = null;
 
 // Current Screen State
 let currentScreen = 'landing-screen';
+let lastFormData = null;
 
 /**
  * Navigate to a different screen
@@ -117,16 +118,16 @@ function addMember() {
         </button>
         <div class="form-group">
             <label>Full Name</label>
-            <input type="text" placeholder="Member's Name" class="member-name-input" oninput="calculatePayment()">
+            <input type="text" placeholder="Member's Name" class="member-name-input">
         </div>
         <div class="form-row">
             <div class="form-group">
                 <label>Age</label>
-                <input type="number" placeholder="Age" class="member-age-input" oninput="calculatePayment()">
+                <input type="number" placeholder="Age" class="member-age-input">
             </div>
             <div class="form-group">
                 <label>Status</label>
-                <select class="member-status-input" onchange="calculatePayment()">
+                <select class="member-status-input">
                     <option value="Regular">Regular</option>
                     <option value="Child">Child</option>
                     <option value="PWD">PWD</option>
@@ -136,7 +137,7 @@ function addMember() {
         </div>
         <div class="form-group">
             <label>Visitor Origin / Type</label>
-            <select class="member-type-input" onchange="calculatePayment()">
+            <select class="member-type-input">
                 <option value="Domestic Local" ${defaultType === 'Domestic Local' ? 'selected' : ''}>Within Antique</option>
                 <option value="Domestic National" ${defaultType === 'Domestic National' ? 'selected' : ''}>Outside Antique</option>
                 <option value="Foreigner" ${defaultType === 'Foreigner' ? 'selected' : ''}>Foreigner</option>
@@ -149,8 +150,6 @@ function addMember() {
     if (window.lucide) {
         lucide.createIcons();
     }
-
-    calculatePayment();
 }
 
 /**
@@ -163,38 +162,21 @@ function removeMember(memberId) {
         member.classList.add('fade-out');
         setTimeout(() => {
             member.remove();
-            calculatePayment();
         }, 100);
     }
 }
 
 /**
  * Calculate total payment based on inputs
+ * Returns the final total string (e.g. "₱100.00")
  */
-function calculatePayment() {
+function calculateTotalValue() {
     const primaryAgeInput = document.getElementById('age').value;
     const primaryStatus = document.getElementById('status').value;
     const primaryType = document.getElementById('visitor-type').value;
-    const paymentItemsList = document.getElementById('payment-items');
-    const totalAmountSpan = document.getElementById('total-amount');
-    const paymentSummaryContainer = document.getElementById('payment-summary-container');
-
-    // Hide payment record if primary age or type is not selected yet
-    if (primaryAgeInput === '' || primaryType === '') {
-        if (paymentSummaryContainer) {
-            paymentSummaryContainer.style.display = 'none';
-        }
-        return;
-    }
-
-    // Show payment record
-    if (paymentSummaryContainer) {
-        paymentSummaryContainer.style.display = 'block';
-    }
 
     const primaryAge = parseInt(primaryAgeInput) || 0;
     let total = 0;
-    paymentItemsList.innerHTML = '';
 
     // 1. Calculate for Primary Visitor
     const isPrimaryDiscounted = primaryStatus !== 'Regular' || primaryAge < 13 || primaryAge >= 60;
@@ -206,20 +188,11 @@ function calculatePayment() {
     const primaryCost = (finalPrimaryStatus !== 'Regular') ? baseFee * (1 - DISCOUNT_RATE) : baseFee;
     total += primaryCost;
 
-    const primaryItem = document.createElement('div');
-    primaryItem.className = 'payment-item';
-    primaryItem.innerHTML = `
-        <span>Primary Visitor (${finalPrimaryStatus} - ${primaryType})</span>
-        <span>₱${primaryCost.toFixed(2)}</span>
-    `;
-    paymentItemsList.appendChild(primaryItem);
-
     // 2. Calculate for Additional Members
     const memberCards = document.querySelectorAll('.member-card');
     memberCards.forEach((card, index) => {
         const status = card.querySelector('.member-status-input').value;
         const type = card.querySelector('.member-type-input').value;
-        const name = card.querySelector('.member-name-input').value || `Member ${index + 1}`;
         const age = parseInt(card.querySelector('.member-age-input').value) || 0;
 
         const isDiscounted = status !== 'Regular' || age < 13 || age >= 60;
@@ -230,20 +203,60 @@ function calculatePayment() {
         const mBaseFee = FEES[type] || 50;
         const cost = (finalStatus !== 'Regular') ? mBaseFee * (1 - DISCOUNT_RATE) : mBaseFee;
         total += cost;
-
-        const item = document.createElement('div');
-        item.className = 'payment-item';
-        item.innerHTML = `
-            <span>${name} (${finalStatus} - ${type})</span>
-            <span>₱${cost.toFixed(2)}</span>
-        `;
-        paymentItemsList.appendChild(item);
     });
 
-    // Update Totals
-    totalAmountSpan.innerText = `₱${total.toFixed(2)}`;
+    return `₱${total.toFixed(2)}`;
 }
 
+/**
+ * Render the full preview in the PREVIEW SCREEN
+ */
+function renderPreview(formData) {
+    const list = document.getElementById('preview-items-list');
+    const totalEl = document.getElementById('preview-total-amount');
+    list.innerHTML = '';
+
+    // Primary Visitor Row
+    const primaryRow = document.createElement('div');
+    primaryRow.style.display = 'flex';
+    primaryRow.style.justifyContent = 'space-between';
+    primaryRow.style.fontSize = '1.05rem';
+    primaryRow.style.color = '#1e293b';
+
+    // Calculate Primary Fee for display
+    const isDiscounted = formData.status_display !== 'Regular';
+    const baseFee = FEES[formData.visitorType] || 50;
+    const cost = isDiscounted ? baseFee * (1 - DISCOUNT_RATE) : baseFee;
+
+    primaryRow.innerHTML = `
+        <span style="font-weight: 500;">Primary Visitor <span style="color:#64748b; font-size: 0.9rem;">(${formData.status_display} - ${formData.visitorType})</span></span>
+        <span style="font-weight: 700;">₱${cost.toFixed(2)}</span>
+    `;
+    list.appendChild(primaryRow);
+
+    // Member Rows
+    formData.members.forEach(m => {
+        const row = document.createElement('div');
+        row.style.display = 'flex';
+        row.style.justifyContent = 'space-between';
+        row.style.fontSize = '1.05rem';
+        row.style.color = '#1e293b';
+
+        const mIsDiscounted = m.status_display !== 'Regular';
+        const mBaseFee = FEES[m.visitorType] || 50;
+        const mCost = mIsDiscounted ? mBaseFee * (1 - DISCOUNT_RATE) : mBaseFee;
+
+        row.innerHTML = `
+            <span style="font-weight: 500;">${m.name} <span style="color:#64748b; font-size: 0.9rem;">(${m.status_display} - ${m.visitorType})</span></span>
+            <span style="font-weight: 700;">₱${mCost.toFixed(2)}</span>
+        `;
+        list.appendChild(row);
+    });
+
+    totalEl.innerText = formData.total;
+
+    if (window.lucide) lucide.createIcons();
+}
 
 /**
  * Show/hide the manual destination input when "Others" is selected
@@ -268,25 +281,34 @@ function toggleOtherResort() {
 document.getElementById('tourist-form').addEventListener('submit', function (e) {
     e.preventDefault();
 
-    // Generate Unique ID
-    const visitorId = `TIB-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
-
-    // Prepare Registry Data for Database
+    // Gather Detailed Data
     const memberData = [];
     document.querySelectorAll('.member-card').forEach((card, index) => {
+        const status = card.querySelector('.member-status-input').value;
+        const age = parseInt(card.querySelector('.member-age-input').value) || 0;
+        const isDiscounted = status !== 'Regular' || age < 13 || age >= 60;
+        const statusDisplay = isDiscounted && status === 'Regular' ? (age < 13 ? 'Child' : 'Senior Citizen') : status;
+
         memberData.push({
             name: card.querySelector('.member-name-input').value || `Member ${index + 1}`,
-            age: card.querySelector('.member-age-input').value || 0,
-            status: card.querySelector('.member-status-input').value,
+            age: age,
+            status: status,
+            status_display: statusDisplay,
             visitorType: card.querySelector('.member-type-input').value
         });
     });
 
-    const formData = {
-        id: visitorId,
+    const primaryStatus = document.getElementById('status').value;
+    const primaryAge = parseInt(document.getElementById('age').value) || 0;
+    const isPrimaryDiscounted = primaryStatus !== 'Regular' || primaryAge < 13 || primaryAge >= 60;
+    const primaryStatusDisplay = isPrimaryDiscounted && primaryStatus === 'Regular' ? (primaryAge < 13 ? 'Child' : 'Senior Citizen') : primaryStatus;
+
+    lastFormData = {
         name: document.getElementById('name').value,
         address: document.getElementById('address').value,
-        age: parseInt(document.getElementById('age').value) || 0,
+        age: primaryAge,
+        status: primaryStatus,
+        status_display: primaryStatusDisplay,
         gender: document.getElementById('gender').value,
         resort: (document.getElementById('resort').value === 'Others')
             ? (document.getElementById('resort-other').value.trim() || 'Others')
@@ -294,15 +316,30 @@ document.getElementById('tourist-form').addEventListener('submit', function (e) 
         visitorType: document.getElementById('visitor-type').value,
         duration: document.getElementById('duration').value,
         members: memberData,
-        total: document.getElementById('total-amount').innerText,
+        total: calculateTotalValue(),
         status: 'Active'
     };
+
+    // Show Preview Instead of Submitting
+    renderPreview(lastFormData);
+    navigateTo('preview-screen');
+});
+
+/**
+ * Final step: Submit to server
+ */
+function confirmRegistration() {
+    if (!lastFormData) return;
+
+    // Generate Unique ID just before final submission
+    const visitorId = `TIB-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    lastFormData.id = visitorId;
 
     // 1. Save to SQLite Database via API
     fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(lastFormData)
     })
         .then(async response => {
             if (!response.ok) {
@@ -317,7 +354,7 @@ document.getElementById('tourist-form').addEventListener('submit', function (e) 
         })
         .then(data => {
             console.log('Success:', data);
-            saveToLocalAndShowSuccess(formData, visitorId);
+            saveToLocalAndShowSuccess(lastFormData, visitorId);
         })
         .catch((error) => {
             console.error('Registration Error:', error);
@@ -326,12 +363,13 @@ document.getElementById('tourist-form').addEventListener('submit', function (e) 
 
             // Queue for later sync if needed
             let queue = JSON.parse(localStorage.getItem('offline_register_queue') || '[]');
-            queue.push(formData);
+            queue.push(lastFormData);
             localStorage.setItem('offline_register_queue', JSON.stringify(queue));
 
-            saveToLocalAndShowSuccess(formData, visitorId);
+            saveToLocalAndShowSuccess(lastFormData, visitorId);
         });
-});
+}
+
 
 function saveToLocalAndShowSuccess(formData, visitorId) {
     // Local Storage Sync (Optional fallback)
@@ -354,6 +392,28 @@ function saveToLocalAndShowSuccess(formData, visitorId) {
         </div>
     `;
     navigateTo('success-screen');
+}
+
+/**
+ * Copy Registration ID to clipboard
+ */
+function copyID() {
+    const idText = document.getElementById('generated-id').innerText;
+    navigator.clipboard.writeText(idText).then(() => {
+        const copyBtn = document.querySelector('.copy-btn');
+        const originalHTML = copyBtn.innerHTML;
+
+        // Visual feedback
+        copyBtn.innerHTML = '<i data-lucide="check" style="width: 18px; height: 18px; color: #10b981;"></i>';
+        if (window.lucide) lucide.createIcons();
+
+        setTimeout(() => {
+            copyBtn.innerHTML = originalHTML;
+            if (window.lucide) lucide.createIcons();
+        }, 2000);
+    }).catch(err => {
+        console.error('Failed to copy: ', err);
+    });
 }
 
 /**
@@ -408,13 +468,9 @@ function handleSuccessfulCheckout(idInput) {
 
 // Event Listeners
 document.getElementById('add-member').addEventListener('click', addMember);
-document.getElementById('age').addEventListener('change', calculatePayment);
-
-// Handle manual change on member status dropdowns that are dynamically added
-// already handled via inline onchange="calculatePayment()" 
 
 // Initial calculation
-calculatePayment();
+// No longer needed real-time
 
 // Check if URL suggests direct navigation to registration (for QR scans)
 document.addEventListener('DOMContentLoaded', () => {

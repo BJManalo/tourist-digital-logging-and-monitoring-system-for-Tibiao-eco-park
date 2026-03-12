@@ -1,7 +1,29 @@
 // Shared Dashboard rendering function for DataDash style
-async function renderDashboard() {
+async function renderDashboard(timeFilter = 'Daily') {
     const response = await fetch('/api/visitors');
-    const visitors = await response.json();
+    let visitors = await response.json();
+
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    // Apply Filter
+    if (timeFilter === 'Daily') {
+        visitors = visitors.filter(v => new Date(v.created_at) >= today);
+    } else if (timeFilter === 'Weekly') {
+        const lastWeek = new Date(today);
+        lastWeek.setDate(lastWeek.getDate() - 7);
+        visitors = visitors.filter(v => new Date(v.created_at) >= lastWeek);
+    } else if (timeFilter === 'Monthly') {
+        visitors = visitors.filter(v => {
+            const vDate = new Date(v.created_at);
+            return vDate.getMonth() === now.getMonth() && vDate.getFullYear() === now.getFullYear();
+        });
+    } else if (timeFilter === 'Annually') {
+        visitors = visitors.filter(v => {
+            const vDate = new Date(v.created_at);
+            return vDate.getFullYear() === now.getFullYear();
+        });
+    }
 
     const activeCount = visitors.filter(v => v.status === 'Active').length;
     const checkoutCount = visitors.filter(v => v.status === 'Checked Out').length;
@@ -19,9 +41,23 @@ async function renderDashboard() {
     `).join('');
 
     return `
+        <!-- Dashboard Filter UI -->
+        <div style="margin: -1.25rem 0 1.5rem 0; display: flex; justify-content: flex-end;">
+            <div style="display: flex; align-items: center; gap: 8px; background: white; padding: 6px 12px; border-radius: 10px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                <i data-lucide="filter" style="width: 14px; height: 14px; color: #64748b;"></i>
+                <select onchange="refreshDashboard(this.value)" style="border: none; font-size: 0.8rem; font-weight: 700; color: #1e293b; cursor: pointer; background: transparent; outline: none;">
+                    <option value="Daily" ${timeFilter === 'Daily' ? 'selected' : ''}>Today</option>
+                    <option value="Weekly" ${timeFilter === 'Weekly' ? 'selected' : ''}>This Week</option>
+                    <option value="Monthly" ${timeFilter === 'Monthly' ? 'selected' : ''}>This Month</option>
+                    <option value="Annually" ${timeFilter === 'Annually' ? 'selected' : ''}>This Year</option>
+                    <option value="All" ${timeFilter === 'All' ? 'selected' : ''}>All Time</option>
+                </select>
+            </div>
+        </div>
+
         <div class="stat-grid">
             <div class="stat-card fade-in" onclick="showView('revenue')" style="cursor: pointer;">
-                <span class="stat-label">TOTAL REVENUE</span>
+                <span class="stat-label">TOTAL COLLECTION FEE</span>
                 <span class="stat-value" style="margin-top:0.2rem">₱${totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                 <i data-lucide="trend-up" class="stat-card-icon" style="color: var(--success); opacity: 0.2;"></i>
             </div>
@@ -45,9 +81,10 @@ async function renderDashboard() {
         <div class="datadash-middle-grid fade-in">
             <div class="chart-card">
                 <div class="chart-header">
-                    <span>Revenue & User Growth</span>
-                    <button class="btn" onclick="showView('revenue')" style="background:var(--sidebar-bg); border:1px solid var(--border-color); color:var(--text-main); font-size: 0.75rem; padding: 0.4rem 0.8rem; cursor: pointer;">View Chart</button>
+                    <span><span style="white-space: nowrap;">Collection Fee &</span><br>User Growth</span>
+                    <button class="btn" onclick="showView('revenue')" style="width: auto; background:var(--sidebar-bg); border:1px solid var(--border-color); color:var(--text-main); font-size: 0.75rem; padding: 0.4rem 0.8rem; cursor: pointer;">View Chart</button>
                 </div>
+                <!-- DataDash chart will mount here -->
                 <div class="chart-container">
                     <canvas id="dashboardRevenueChart"></canvas>
                 </div>
@@ -79,7 +116,7 @@ async function renderDashboard() {
                         </tr>
                     </thead>
                     <tbody>
-                        ${recentTransactionsRows || '<tr><td colspan="5" style="text-align:center;">No recent transactions.</td></tr>'}
+                        ${recentTransactionsRows || '<tr><td colspan="5" style="text-align:center;">No recent transactions for this period.</td></tr>'}
                     </tbody>
                 </table>
             </div>
@@ -88,32 +125,59 @@ async function renderDashboard() {
 }
 
 // Chart Initializer
-async function initDashboardCharts() {
+async function initDashboardCharts(timeFilter = 'Daily') {
     const response = await fetch('/api/visitors');
-    const visitors = await response.json();
+    let visitors = await response.json();
+
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    // Apply filter for visual consistency with the stats cards
+    let filteredVisitors = visitors;
+    if (timeFilter === 'Daily') {
+        filteredVisitors = visitors.filter(v => new Date(v.created_at) >= today);
+    } else if (timeFilter === 'Weekly') {
+        const lastWeek = new Date(today);
+        lastWeek.setDate(lastWeek.getDate() - 7);
+        filteredVisitors = visitors.filter(v => new Date(v.created_at) >= lastWeek);
+    } else if (timeFilter === 'Monthly') {
+        filteredVisitors = visitors.filter(v => {
+            const vDate = new Date(v.created_at);
+            return vDate.getMonth() === now.getMonth() && vDate.getFullYear() === now.getFullYear();
+        });
+    } else if (timeFilter === 'Annually') {
+        filteredVisitors = visitors.filter(v => {
+            const vDate = new Date(v.created_at);
+            return vDate.getFullYear() === now.getFullYear();
+        });
+    }
 
     // Line Chart Data
     const revenueCtx = document.getElementById('dashboardRevenueChart');
     if (revenueCtx) {
-        // Group by day for the last 7 days
         const labels = [];
         const data = [];
         const userGrowth = [];
 
-        let currentDate = new Date();
+        // Logic for labels based on filter
+        const currentDate = new Date();
         for (let i = 6; i >= 0; i--) {
             let d = new Date(currentDate);
             d.setDate(d.getDate() - i);
-            const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-            labels.push(dateStr);
 
-            // Filter visitors for this exact date
+            let label = "";
+            if (timeFilter === 'Weekly') {
+                label = d.toLocaleDateString('en-US', { weekday: 'short' });
+            } else {
+                label = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            }
+            labels.push(label);
+
             const daysVisitors = visitors.filter(v => new Date(v.created_at).toDateString() === d.toDateString());
             userGrowth.push(daysVisitors.length);
-
-            let dailyRevenue = 0;
-            daysVisitors.forEach(v => dailyRevenue += parseFloat(v.total.replace('₱', '').replace(',', '')));
-            data.push(dailyRevenue);
+            let dailyRev = 0;
+            daysVisitors.forEach(v => dailyRev += parseFloat(v.total.replace('₱', '').replace(',', '')) || 0);
+            data.push(dailyRev);
         }
 
         new Chart(revenueCtx, {
@@ -122,7 +186,7 @@ async function initDashboardCharts() {
                 labels: labels,
                 datasets: [
                     {
-                        label: 'Revenue (₱)',
+                        label: 'Collection Fee (₱)',
                         data: data,
                         borderColor: '#3b82f6',
                         backgroundColor: 'rgba(59, 130, 246, 0.1)',
@@ -158,7 +222,8 @@ async function initDashboardCharts() {
     const pieCtx = document.getElementById('dashboardPieChart');
     if (pieCtx) {
         const resortCounts = {};
-        visitors.forEach(v => {
+        // Use filtered visitors for the pie chart
+        filteredVisitors.forEach(v => {
             if (!resortCounts[v.resort]) resortCounts[v.resort] = 0;
             resortCounts[v.resort]++;
         });
@@ -184,4 +249,17 @@ async function initDashboardCharts() {
             }
         });
     }
+}
+
+async function refreshDashboard(filter) {
+    const contentArea = document.getElementById('content-area');
+    contentArea.innerHTML = `<div style="padding: 2rem; text-align: center;">Refreshing Dashboard...</div>`;
+
+    // Smooth transition
+    const html = await renderDashboard(filter);
+    contentArea.innerHTML = html;
+
+    // Re-init lucide icons and charts
+    if (window.lucide) lucide.createIcons();
+    setTimeout(() => initDashboardCharts(filter), 50);
 }

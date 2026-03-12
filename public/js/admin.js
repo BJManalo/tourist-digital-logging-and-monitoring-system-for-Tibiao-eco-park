@@ -187,12 +187,34 @@ async function renderVisitorLogs(filter = 'All') {
 
     let rows = visitors.map(v => {
         const membersList = JSON.parse(v.members || '[]');
+        // Build companions list HTML (collapsed by default)
+        let companionsHtml = '';
+        if (membersList.length > 0) {
+            companionsHtml = `
+                <div id="companions-${v.id}" style="display: none; font-size: 0.75rem; color: #94a3b8; margin-top: 8px; padding-left: 12px; border-left: 2px solid var(--primary); animation: fadeIn 0.2s ease;">
+                    <div style="font-weight: 700; font-size: 0.65rem; text-transform: uppercase; color: #64748b; margin-bottom: 4px; letter-spacing: 0.5px;">Companions:</div>
+                    ${membersList.map(m => `
+                        <div style="margin-bottom: 3px; display: flex; align-items: center; gap: 6px;">
+                            <span style="color: var(--primary); font-size: 0.4rem;">●</span>
+                            <span style="font-weight: 600; color: #cbd5e1;">${m.name}</span>
+                            <span style="color: #64748b; font-size: 0.7rem;">(${m.age}) — <span style="color:#6366f1">${m.visitorType || 'N/A'}</span></span>
+                        </div>
+                    `).join('')}
+                </div>`;
+        }
+
         return `
             <tr>
                 <td style="font-weight: 700; color: #64748b; font-size: 0.75rem;">${v.id}</td>
                 <td>
-                    <div style="font-weight: 700;">${v.name}</div>
+                    <div style="font-weight: 700; color: ${membersList.length > 0 ? 'var(--primary)' : 'var(--text-main)'}; cursor: ${membersList.length > 0 ? 'pointer' : 'default'}; display: inline-block; transition: all 0.2s;" 
+                         ${membersList.length > 0 ? `onclick="toggleCompanions('${v.id}')"` : ''}
+                         ${membersList.length > 0 ? `onmouseover="this.style.textDecoration='underline'; this.style.opacity='0.8'"` : ''} 
+                         onmouseout="this.style.textDecoration='none'; this.style.opacity='1'">
+                        ${v.name}
+                    </div>
                     <div style="font-size: 0.75rem; color: #94a3b8;">Headcount: ${1 + membersList.length}</div>
+                    ${companionsHtml}
                 </td>
                 <td>${v.resort}</td>
                 <td><span style="font-weight: 600; color: #059669;">${v.total}</span></td>
@@ -334,7 +356,7 @@ async function renderReports(filter = 'Daily') {
                         <div style="font-size: 2rem; font-weight: 900; color: #3b82f6;">${totalHeadcount}</div>
                     </div>
                     <div style="background: #f8fafc; padding: 1.5rem; border-radius: 16px; border: 1px solid #e2e8f0; text-align: center;">
-                        <div style="font-size: 0.75rem; color: #64748b; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.5rem;">Gross Revenue</div>
+                        <div style="font-size: 0.75rem; color: #64748b; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.5rem;">Gross Collection Fee</div>
                         <div style="font-size: 2rem; font-weight: 900; color: #10b981;">₱${totalRevenue.toLocaleString()}</div>
                     </div>
                 </div>
@@ -715,7 +737,7 @@ async function refreshProfile() {
 function renderRevenueGraph() {
     return `
         <div class="table-container fade-in">
-            <h3 style="font-family: 'Montserrat'; margin-bottom: 2rem;">Revenue Overview (Daily Trend)</h3>
+            <h3 style="font-family: 'Montserrat'; margin-bottom: 2rem;">Collection Fee Overview (Daily Trend)</h3>
             <div style="height: 400px;">
                 <canvas id="revenueChart"></canvas>
             </div>
@@ -740,7 +762,7 @@ async function initRevenueChart() {
         data: {
             labels: Object.keys(resortData).length > 0 ? Object.keys(resortData) : ['Calawag', 'BlueWave', 'Campolly'],
             datasets: [{
-                label: 'Revenue by Destination (₱)',
+                label: 'Collection Fee by Destination (₱)',
                 data: Object.values(resortData).length > 0 ? Object.values(resortData) : [0, 0, 0],
                 backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#6366f1'],
                 borderRadius: 8,
@@ -780,20 +802,6 @@ async function renderAttendanceLogs() {
             dutyStatus = '<span class="badge" style="background: #f1f5f9; color: #475569;">Timed Out</span>';
         }
 
-        let statusBadge = '';
-        if (log.approval_status === 'Approved') {
-            statusBadge = '<span class="badge badge-active">Approved</span>';
-        } else if (log.approval_status === 'Disapproved') {
-            statusBadge = '<span class="badge" style="background: #fee2e2; color: #991b1b;">Disapproved</span>';
-        } else {
-            statusBadge = `
-                <div class="no-print" style="display: flex; gap: 5px;">
-                    <button onclick="approveAttendance(${log.id}, 'Approved')" class="btn" style="padding: 4px 8px; font-size: 0.7rem; background: #10b981; color: white; border: none; border-radius: 6px;">Approve</button>
-                    <button onclick="approveAttendance(${log.id}, 'Disapproved')" class="btn" style="padding: 4px 8px; font-size: 0.7rem; background: #ef4444; color: white; border: none; border-radius: 6px;">Deny</button>
-                </div>
-                <span class="print-only" style="display:none; color: #94a3b8; font-style: italic;">Pending Review</span>
-            `;
-        }
 
         return `
             <tr style="border-bottom: 1px solid #f1f5f9;">
@@ -804,7 +812,6 @@ async function renderAttendanceLogs() {
                 <td style="padding: 1.25rem 1rem; color:#10b981; font-weight:700;">${timeIn}</td>
                 <td style="padding: 1.25rem 1rem; color:#1e293b; font-weight:600;">${timeOut}</td>
                 <td style="padding: 1.25rem 1rem;">${dutyStatus}</td>
-                <td style="padding: 1.25rem 1rem;">${statusBadge}</td>
                 <td style="padding: 1.25rem 1rem; font-size: 0.85rem; color: #64748b; max-width: 250px;">${log.remarks || '<em style="color:#cbd5e1">No remarks</em>'}</td>
             </tr>
         `;
@@ -815,7 +822,7 @@ async function renderAttendanceLogs() {
             <div style="display:flex; justify-content:space-between; align-items: flex-end; margin-bottom: 2rem;">
                 <div>
                     <h3 style="font-family:'Montserrat'; font-weight: 800; font-size: 1.5rem; color: #1e293b; margin: 0;">Personnel Attendance</h3>
-                    <p class="no-print" style="font-size: 0.9rem; color: #64748b; margin-top: 4px;">Approve, monitor, and oversee staff duty cycles</p>
+                    <p class="no-print" style="font-size: 0.9rem; color: #64748b; margin-top: 4px;">Monitor and oversee staff duty cycles</p>
                 </div>
                 <button class="btn btn-primary no-print" onclick="window.print()" title="Export Attendance Log" style="width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; padding: 0; font-weight: 700;">
                     <i data-lucide="printer" style="width: 18px;"></i>
@@ -830,12 +837,11 @@ async function renderAttendanceLogs() {
                             <th style="padding: 1.25rem 1rem; text-align: left; color: #94a3b8; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #f1f5f9;">In</th>
                             <th style="padding: 1.25rem 1rem; text-align: left; color: #94a3b8; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #f1f5f9;">Out</th>
                             <th style="padding: 1.25rem 1rem; text-align: left; color: #94a3b8; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #f1f5f9;">Duty Status</th>
-                            <th style="padding: 1.25rem 1rem; text-align: left; color: #94a3b8; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #f1f5f9;">Approval Status</th>
                             <th style="padding: 1.25rem 1rem; text-align: left; color: #94a3b8; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #f1f5f9;">Notes</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${rows || '<tr><td colspan="6" style="text-align:center; padding: 4rem; color: #94a3b8;">No attendance records found.</td></tr>'}
+                        ${rows || '<tr><td colspan="5" style="text-align:center; padding: 4rem; color: #94a3b8;">No attendance records found.</td></tr>'}
                     </tbody>
                 </table>
             </div>
@@ -845,19 +851,21 @@ async function renderAttendanceLogs() {
             @media print {
                 .print-only { display: inline-block !important; }
             }
+            @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
         </style>
     `;
 }
 
-async function approveAttendance(id, status) {
-    if (!(await showConfirm(`Are you sure you want to ${status.toLowerCase()} this attendance log?`))) return;
-    const response = await fetch('/api/attendance/approve', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, status })
-    });
-    if (response.ok) showView('attendance');
+/**
+ * Toggle inline companion list display
+ */
+function toggleCompanions(id) {
+    const el = document.getElementById(`companions-${id}`);
+    if (el) {
+        el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    }
 }
+
 
 /**
  * Universal Table Filter

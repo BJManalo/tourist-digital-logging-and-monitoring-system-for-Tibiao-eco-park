@@ -134,8 +134,8 @@
 
             <div class="form-container">
                 <div class="step-indicator">
-                    <div class="step-dot active"></div>
                     <div class="step-dot"></div>
+                    <div class="step-dot active"></div>
                     <div class="step-dot"></div>
                 </div>
 
@@ -159,11 +159,11 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label for="age">Age *</label>
-                            <input type="number" id="age" placeholder="Enter age" oninput="calculatePayment()" required>
+                            <input type="number" id="age" placeholder="Enter age" required>
                         </div>
                         <div class="form-group">
                             <label for="status">Status *</label>
-                            <select id="status" onchange="calculatePayment()" required>
+                            <select id="status" required>
                                 <option value="Regular" selected>Regular</option>
                                 <option value="Child">Child</option>
                                 <option value="PWD">PWD</option>
@@ -200,7 +200,7 @@
 
                     <div class="form-group">
                         <label for="visitor-type">Visitor Type *</label>
-                        <select id="visitor-type" onchange="calculatePayment()" required>
+                        <select id="visitor-type" required>
                             <option value="" disabled selected>Select type</option>
                             <option value="Domestic Local">Domestic (Within Antique)</option>
                             <option value="Domestic National">Domestic (Outside Antique)</option>
@@ -231,34 +231,75 @@
                         </button>
                     </div>
 
-                    <!-- Payment Record -->
-                    <div class="payment-summary" id="payment-summary-container" style="display: none;">
-                        <h3 class="payment-title">
-                            <i data-lucide="receipt"></i> Payment Record
-                        </h3>
-                        <div id="payment-items">
-                            <div class="payment-item">
-                                <span>Primary Visitor (Regular)</span>
-                                <span id="primary-cost">₱100.00</span>
-                            </div>
-                        </div>
-                        <div class="payment-total">
-                            <span>Total Payable</span>
-                            <span id="total-amount">₱100.00</span>
-                        </div>
-                        <p style="font-size: 0.75rem; color: #6b7280; margin-top: 0.5rem;">
-                            * Fees: Within Antique ₱20 &bull; Outside Antique / Foreigner ₱50.<br>
-                            * 20% Discount applied for Children (under 13), PWD, and Seniors (60+).
-                        </p>
-                    </div>
-
                     <div style="padding: 2rem 0;">
                         <button type="submit" class="btn btn-primary">
                             Preview Registration <i data-lucide="arrow-right"></i>
                         </button>
                     </div>
                 </form>
-                <div style="height: 50px;"></div> <!-- Spacer -->
+                <div style="height: 20px;"></div>
+            </div>
+        </section>
+
+        <!-- 3.5 PREVIEW SCREEN -->
+        <section id="preview-screen" class="hidden fade-in">
+            <header class="app-header">
+                <button class="header-back" onclick="navigateTo('registration-screen')">
+                    <i data-lucide="chevron-left"></i>
+                </button>
+                <span class="header-title">Registration Preview</span>
+            </header>
+
+            <div class="form-container">
+                <div class="step-indicator">
+                    <div class="step-dot"></div>
+                    <div class="step-dot"></div>
+                    <div class="step-dot active"></div>
+                </div>
+
+                <!-- Premium Payment Record Card -->
+                <div id="premium-payment-card"
+                    style="background: #f8fbff; border-radius: 24px; border: 1px solid #e2e8f0; padding: 1.75rem; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); margin-bottom: 2rem;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 1.5rem;">
+                        <div
+                            style="background: #fff; width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+                            <i data-lucide="banknote" style="color: #1e293b; width: 22px;"></i>
+                        </div>
+                        <h2
+                            style="font-family: 'Montserrat'; font-size: 1.25rem; font-weight: 800; color: #1e293b; margin: 0;">
+                            Payment Record</h2>
+                    </div>
+
+                    <div id="preview-items-list"
+                        style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 1.5rem;">
+                        <!-- Items will be injected here -->
+                    </div>
+
+                    <div style="border-top: 2px dashed #cbd5e1; margin-bottom: 1.5rem; opacity: 0.5;"></div>
+
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <span style="font-size: 1.5rem; font-weight: 800; color: #059669;">Total Payable</span>
+                        <span id="preview-total-amount"
+                            style="font-size: 1.5rem; font-weight: 800; color: #059669;">₱0.00</span>
+                    </div>
+
+                    <div style="font-size: 0.75rem; color: #64748b; line-height: 1.6;">
+                        <p style="margin-bottom: 4px;">* Fees: Within Antique ₱20 • Outside Antique / Foreigner ₱50.</p>
+                        <p>* 20% Discount applied for Children (under 13), PWD, and Seniors (60+).</p>
+                    </div>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    <button class="btn btn-primary" onclick="confirmRegistration()">
+                        Submit
+                    </button>
+                    <button class="btn btn-outline" onclick="navigateTo('registration-screen')">
+                        Go Back & Edit
+                    </button>
+                </div>
+
+                <div style="height: 50px;"></div>
             </div>
         </section>
 
@@ -279,7 +320,13 @@
 
             <div class="id-badge">
                 <p>Registration ID</p>
-                <h1 id="generated-id">TIB-XXXX-XXXX</h1>
+                <div
+                    style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 0.5rem;">
+                    <h1 id="generated-id" style="margin: 0;">TIB-XXXX-XXXX</h1>
+                    <button onclick="copyID()" class="copy-btn" title="Copy ID">
+                        <i data-lucide="copy" style="width: 18px; height: 18px;"></i>
+                    </button>
+                </div>
                 <p style="font-size: 0.75rem; margin-top: 0.5rem; opacity: 0.7;">Keep this ID for check-out</p>
             </div>
 

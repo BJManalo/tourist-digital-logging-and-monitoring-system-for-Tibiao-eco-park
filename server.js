@@ -83,15 +83,13 @@ function createTables() {
         remarks TEXT,
         break_start DATETIME,
         total_break_time INTEGER DEFAULT 0,
-        approval_status TEXT DEFAULT 'Pending',
         FOREIGN KEY (user_id) REFERENCES users (id)
     )`, () => {
         // Migration: Add missing columns if they don't exist
         const columns = [
             { name: 'remarks', type: 'TEXT' },
             { name: 'break_start', type: 'DATETIME' },
-            { name: 'total_break_time', type: 'INTEGER DEFAULT 0' },
-            { name: 'approval_status', type: "TEXT DEFAULT 'Pending'" }
+            { name: 'total_break_time', type: 'INTEGER DEFAULT 0' }
         ];
 
         columns.forEach(col => {
@@ -268,7 +266,7 @@ app.post('/api/attendance/timein', (req, res) => {
         if (err) return res.status(500).json({ error: err.message });
         if (row) return res.status(400).json({ error: 'You have an active shift/break. End it first.' });
 
-        db.run("INSERT INTO attendance (user_id, username, status, remarks, approval_status) VALUES (?, ?, 'IN', ?, 'Pending')", [userId, username, remarks], function (err) {
+        db.run("INSERT INTO attendance (user_id, username, status, remarks) VALUES (?, ?, 'IN', ?)", [userId, username, remarks], function (err) {
             if (err) return res.status(500).json({ error: err.message });
             res.json({ message: 'Timed in successfully', id: this.lastID });
         });
@@ -320,13 +318,6 @@ app.post('/api/attendance/break', (req, res) => {
     });
 });
 
-app.post('/api/attendance/approve', (req, res) => {
-    const { id, status } = req.body; // status: Approved or Disapproved
-    db.run("UPDATE attendance SET approval_status = ? WHERE id = ?", [status, id], function (err) {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ message: `Attendance ${status.toLowerCase()} successfully` });
-    });
-});
 
 app.get('/api/attendance/status/:userId', (req, res) => {
     const { userId } = req.params;
