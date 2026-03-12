@@ -81,7 +81,7 @@ async function renderDashboard(timeFilter = 'Daily') {
         <div class="datadash-middle-grid fade-in">
             <div class="chart-card">
                 <div class="chart-header">
-                    <span><span style="white-space: nowrap;">Collection Fee &</span><br>User Growth</span>
+                    <span><span style="white-space: nowrap;">Collection Fee &</span><br>Visitor Growth</span>
                     <button class="btn" onclick="showView('revenue')" style="width: auto; background:var(--sidebar-bg); border:1px solid var(--border-color); color:var(--text-main); font-size: 0.75rem; padding: 0.4rem 0.8rem; cursor: pointer;">View Chart</button>
                 </div>
                 <!-- DataDash chart will mount here -->
@@ -157,7 +157,7 @@ async function initDashboardCharts(timeFilter = 'Daily') {
     if (revenueCtx) {
         const labels = [];
         const data = [];
-        const userGrowth = [];
+        const visitorGrowth = [];
 
 
         const currentDate = new Date();
@@ -174,7 +174,7 @@ async function initDashboardCharts(timeFilter = 'Daily') {
             labels.push(label);
 
             const daysVisitors = visitors.filter(v => new Date(v.created_at).toDateString() === d.toDateString());
-            userGrowth.push(daysVisitors.length);
+            visitorGrowth.push(daysVisitors.length);
             let dailyRev = 0;
             daysVisitors.forEach(v => dailyRev += parseFloat(v.total.replace('₱', '').replace(',', '')) || 0);
             data.push(dailyRev);
@@ -195,8 +195,8 @@ async function initDashboardCharts(timeFilter = 'Daily') {
                         fill: true
                     },
                     {
-                        label: 'Users',
-                        data: userGrowth,
+                        label: 'Visitors',
+                        data: visitorGrowth,
                         borderColor: '#10b981',
                         borderWidth: 2,
                         tension: 0.4,
@@ -211,7 +211,15 @@ async function initDashboardCharts(timeFilter = 'Daily') {
                     legend: { labels: { color: '#94a3b8' }, position: 'top' }
                 },
                 scales: {
-                    y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' } },
+                    y: {
+                        grid: { color: '#334155' },
+                        ticks: {
+                            color: '#94a3b8',
+                            precision: 0,
+                            stepSize: 1
+                        },
+                        beginAtZero: true
+                    },
                     x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
                 }
             }
