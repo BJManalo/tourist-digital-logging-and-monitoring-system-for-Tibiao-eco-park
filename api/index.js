@@ -60,6 +60,7 @@ app.get('/api/init-db', async (req, res) => {
                 members TEXT,
                 total TEXT,
                 status TEXT DEFAULT 'Active',
+                payment_status TEXT DEFAULT 'Paid',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);
@@ -75,8 +76,7 @@ app.get('/api/init-db', async (req, res) => {
                 date DATE DEFAULT CURRENT_DATE,
                 remarks TEXT,
                 break_start TIMESTAMP,
-                total_break_time INTEGER DEFAULT 0,
-                approval_status TEXT DEFAULT 'Pending'
+                total_break_time INTEGER DEFAULT 0
             );
         `);
 
@@ -106,12 +106,13 @@ app.get('/api/visitors', async (req, res) => {
 // 2. Register
 app.post('/api/register', async (req, res) => {
     try {
-        const { id, name, address, age, gender, resort, visitorType, duration, members, total } = req.body;
+        const { id, name, address, age, gender, resort, visitorType, duration, members, total, paymentStatus } = req.body;
         const membersStr = members ? JSON.stringify(members) : '[]';
+        const payStatus = paymentStatus || 'Paid';
 
         await pool.query(
-            "INSERT INTO visitors (id, name, address, age, gender, resort, visitor_type, duration, members, total, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'Active')",
-            [id, name, address, age, gender, resort, visitorType, duration, membersStr, total]
+            "INSERT INTO visitors (id, name, address, age, gender, resort, visitor_type, duration, members, total, status, payment_status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'Active', $11)",
+            [id, name, address, age, gender, resort, visitorType, duration, membersStr, total, payStatus]
         );
         res.json({ message: 'Visitor registered successfully', id });
     } catch (err) { res.status(500).json({ error: err.message }); }
@@ -127,7 +128,17 @@ app.post('/api/checkout', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// 4. Update visitor status
+// 4. Update donor/visitor payment status
+app.post('/api/visitors/payment-status', async (req, res) => {
+    try {
+        const { id, paymentStatus } = req.body;
+        const result = await pool.query("UPDATE visitors SET payment_status = $1 WHERE id = $2", [paymentStatus, id]);
+        if (result.rowCount === 0) return res.status(404).json({ message: 'Visitor not found' });
+        res.json({ message: 'Payment status updated successfully', status: paymentStatus });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// 5. Update visitor status
 app.post('/api/visitors/status', async (req, res) => {
     try {
         const { id, status } = req.body;
@@ -200,7 +211,7 @@ app.post('/api/attendance/timein', async (req, res) => {
         const active = await pool.query("SELECT id FROM attendance WHERE user_id = $1 AND status != 'OUT' ORDER BY time_in DESC LIMIT 1", [userId]);
         if (active.rows.length > 0) return res.status(400).json({ error: 'You have an active shift/break. End it first.' });
 
-        const result = await pool.query("INSERT INTO attendance (user_id, username, status, remarks, approval_status) VALUES ($1, $2, 'IN', $3, 'Pending') RETURNING id", [userId, username, remarks]);
+        const result = await pool.query("INSERT INTO attendance (user_id, username, status, remarks) VALUES ($1, $2, 'IN', $3) RETURNING id", [userId, username, remarks]);
         res.json({ message: 'Timed in successfully', id: result.rows[0].id });
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -238,13 +249,6 @@ app.post('/api/attendance/break', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.post('/api/attendance/approve', async (req, res) => {
-    try {
-        const { id, status } = req.body;
-        await pool.query("UPDATE attendance SET approval_status = $1 WHERE id = $2", [status, id]);
-        res.json({ message: `Attendance ${status.toLowerCase()} successfully` });
-    } catch (err) { res.status(500).json({ error: err.message }); }
-});
 
 app.get('/api/attendance/status/:userId', async (req, res) => {
     try {
