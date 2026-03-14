@@ -129,12 +129,12 @@ async function showView(viewId) {
 
     switch (viewId) {
         case 'dashboard':
-            viewTitle.innerText = "System Overview";
+            viewTitle.innerText = "Dashboard";
             contentArea.innerHTML = await renderDashboard();
             setTimeout(initDashboardCharts, 50);
             break;
         case 'visitors':
-            viewTitle.innerText = "Global Visitor Logs";
+            viewTitle.innerText = "Visitor Logs";
             contentArea.innerHTML = await renderVisitorLogs('All');
             break;
         case 'visitors-active':
@@ -146,11 +146,11 @@ async function showView(viewId) {
             contentArea.innerHTML = await renderVisitorLogs('Checked Out');
             break;
         case 'payments':
-            viewTitle.innerText = "Finance & Transactions";
+            viewTitle.innerText = "Payments";
             contentArea.innerHTML = await renderPaymentLogs();
             break;
         case 'reports':
-            viewTitle.innerText = "Analytics & Reports";
+            viewTitle.innerText = "Reports";
             contentArea.innerHTML = await renderReports('Daily');
             break;
         case 'revenue':
@@ -159,11 +159,11 @@ async function showView(viewId) {
             setTimeout(initRevenueChart, 100);
             break;
         case 'accounts':
-            viewTitle.innerText = "Account Management";
+            viewTitle.innerText = "Accounts";
             contentArea.innerHTML = await renderAccountsView();
             break;
         case 'attendance':
-            viewTitle.innerText = "Staff Duty Logs";
+            viewTitle.innerText = "Staff Time Log";
             contentArea.innerHTML = `<div style="padding: 2rem; text-align: center;">Retrieving Employee Logs...</div>`;
             contentArea.innerHTML = await renderAttendanceLogs();
             break;
