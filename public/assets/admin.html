@@ -5,12 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Portal - Tibiao Tourism</title>
-    <link rel="stylesheet" href="css/fonts.css">
-    <script src="js/vendor/lucide.js"></script>
-    <script src="js/vendor/chart.js"></script>
-    <script src="js/datadash.js"></script>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/datadash.css">
+    <link rel="stylesheet" href="../css/fonts.css">
+    <script src="../js/vendor/lucide.js"></script>
+    <script src="../js/vendor/chart.js"></script>
+    <script src="../js/datadash.js"></script>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/datadash.css">
     <style>
         :root {
             --sidebar-width: 280px;
@@ -131,6 +131,21 @@
             align-items: center;
             border-bottom: 1px solid #e2e8f0;
             height: 80px;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .user-info {
+            text-align: right;
         }
 
         .content-area {
@@ -313,7 +328,7 @@
             background: none;
             border: none;
             cursor: pointer;
-            color: #1e293b;
+            color: #ffffff;
             padding: 0.5rem;
         }
 
@@ -375,8 +390,21 @@
                 grid-template-columns: 1fr;
             }
 
+            .top-bar {
+                padding: 1rem;
+                gap: 10px;
+            }
+
             .top-bar h2 {
-                font-size: 1.1rem !important;
+                font-size: 1rem !important;
+                max-width: 140px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .user-info {
+                display: none;
             }
 
             .admin-form-grid {
@@ -440,38 +468,13 @@
 <body class="dashboard-themed">
 
     
-    <div id="login-screen">
-        <div class="login-card fade-in">
-            <div class="logo-container" style="width: 110px; height: 110px; margin: 0 auto 1.5rem;">
-                <img src="images/logo.png" alt="Logo" class="app-logo">
-            </div>
-            <h2 style="text-align: center; font-family: 'Montserrat'; margin-bottom: 0.5rem;">Admin Access</h2>
-            <p style="text-align: center; color: #64748b; margin-bottom: 2.5rem; font-weight: 500;">Authorize
-                administrative portal</p>
 
-            <form id="login-form">
-                <div class="form-group" style="margin-bottom: 1.5rem;">
-                    <label>Admin Username</label>
-                    <input type="text" id="username" placeholder="Enter username" required
-                        style="padding: 0.8rem 1.25rem;">
-                </div>
-                <div class="form-group" style="margin-bottom: 2rem;">
-                    <label>Password</label>
-                    <input type="password" id="password" placeholder="••••••••" required
-                        style="padding: 0.8rem 1.25rem;">
-                </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 1rem; border-radius: 12px;">
-                    Log in
-                </button>
-            </form>
-        </div>
-    </div>
 
     
     <div id="dashboard-layout" class="dashboard-container">
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <img src="images/logo.png" style="width: 50px; height: 50px; border-radius: 50%;" alt="Logo">
+                <img src="../images/logo.png" style="width: 50px; height: 50px; border-radius: 50%;" alt="Logo">
                 <span class="sidebar-brand">ADMIN PANEL</span>
             </div>
 
@@ -510,20 +513,19 @@
                         <i data-lucide="menu"></i>
                     </button>
                     <button id="back-btn-header" onclick="showView('dashboard')"
-                        style="display: none; background: none; border: none; cursor: pointer; color: #1e293b; padding: 0.5rem; align-items: center; justify-content: center;">
+                        style="display: none; background: none; border: none; cursor: pointer; color: #ffffff; padding: 0.5rem; align-items: center; justify-content: center;">
                         <i data-lucide="arrow-left"></i>
                     </button>
                     <h2 id="view-title" style="font-family: 'Montserrat'; font-size: 1.5rem; margin: 0;">Dashboard</h2>
                 </div>
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <div style="text-align: right;" class="no-print">
+                <div class="user-profile no-print">
+                    <div class="user-info">
                         <div style="font-size: 0.85rem; font-weight: 700; color: var(--text-main);"
                             id="admin-profile-name">Admin</div>
                         <div style="font-size: 0.7rem; color: var(--text-muted); font-weight: 600;"
                             id="admin-profile-role">Administrator</div>
                     </div>
-                    <div style="width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--text-main);"
-                        class="no-print">
+                    <div style="width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--text-main);">
                         <i data-lucide="user" style="width: 20px;"></i>
                     </div>
                 </div>
@@ -535,8 +537,8 @@
         </main>
     </div>
 
-    <script src="js/admin.js"></script>
-    <script src="js/sync-engine.js"></script>
+    <script src="../js/admin.js"></script>
+    <script src="../js/sync-engine.js"></script>
 </body>
 
 </html>

@@ -106,8 +106,38 @@ body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    padding: 0;
-    background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 100%);
+    background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 60%, #f0fdf4 100%);
+}
+
+.landing-top {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 2rem 1.5rem 1rem;
+}
+
+.landing-middle {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    gap: 1rem;
+}
+
+.landing-bottom {
+    padding: 1.5rem;
+    background: white;
+    border-top: 1px solid #f0fdf4;
+}
+
+.landing-hint {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    letter-spacing: 0.3px;
 }
 
 .landing-content {
@@ -121,8 +151,8 @@ body {
 }
 
 .logo-container {
-    width: 110px;
-    height: 110px;
+    width: 100px;
+    height: 100px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -130,6 +160,7 @@ body {
     background: transparent !important;
     overflow: hidden;
     border-radius: 50%;
+    box-shadow: 0 4px 12px rgba(16,185,129,0.15);
 }
 
 .app-logo {
@@ -141,22 +172,25 @@ body {
 
 .landing-title {
     font-family: 'Montserrat', sans-serif;
-    font-size: 2.5rem;
+    font-size: 1.35rem;
+    font-weight: 800;
     color: var(--dark);
-    margin-bottom: 0.5rem;
+    line-height: 1.25;
+    margin-bottom: 0.4rem;
+    letter-spacing: -0.3px;
 }
 
 .landing-subtitle {
     color: var(--text-muted);
-    font-size: 1rem;
-    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin: 0;
 }
 
 .landing-visual {
     position: relative;
-    width: 160px;
-    height: 160px;
-    margin-bottom: 2rem;
+    width: 200px;
+    height: 200px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -169,30 +203,31 @@ body {
     background: var(--primary);
     opacity: 0.1;
     border-radius: 50%;
-    animation: pulse 2s infinite;
+    animation: pulse 2.5s ease-in-out infinite;
 }
 
 .visual-icon {
-    width: 80px;
-    height: 80px;
+    width: 100px;
+    height: 100px;
     color: var(--primary);
     z-index: 2;
+    filter: drop-shadow(0 4px 8px rgba(16,185,129,0.25));
 }
 
 @keyframes pulse {
     0% {
-        transform: scale(0.95);
-        opacity: 0.1;
+        transform: scale(0.92);
+        opacity: 0.08;
     }
 
     50% {
-        transform: scale(1.05);
-        opacity: 0.2;
+        transform: scale(1.08);
+        opacity: 0.18;
     }
 
     100% {
-        transform: scale(0.95);
-        opacity: 0.1;
+        transform: scale(0.92);
+        opacity: 0.08;
     }
 }
 

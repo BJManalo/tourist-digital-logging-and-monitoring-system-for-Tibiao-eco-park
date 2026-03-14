@@ -224,25 +224,27 @@ async function renderVisitorLogs(filter = 'All') {
 
     return `
         <div class="table-container fade-in">
-            <div style="margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 20px;">
+            <div class="table-header">
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <span class="badge ${filter === 'All' ? 'badge-active' : 'badge-out'}" onclick="showView('visitors')" style="cursor:pointer">All</span>
                     <span class="badge ${filter === 'Active' ? 'badge-active' : 'badge-out'}" onclick="showView('visitors-active')" style="cursor:pointer">Active</span>
                     <span class="badge ${filter === 'Checked Out' ? 'badge-active' : 'badge-out'}" onclick="showView('visitors-out')" style="cursor:pointer">Out</span>
                 </div>
                 
-                <div style="position: relative; flex: 1; max-width: 300px;">
+                <div class="search-container">
                     <i data-lucide="search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; color: #94a3b8;"></i>
-                    <input type="text" placeholder="Search logs..." oninput="filterTableRows(this.value, 'visitor-table')" 
+                    <input type="text" placeholder="Search..." oninput="filterTableRows(this.value, 'visitor-table')" 
                         style="width: 100%; padding: 0.6rem 0.6rem 0.6rem 2.5rem; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 0.85rem; outline: none; transition: all 0.2s; background: #f8fafc;">
                 </div>
             </div>
-            <table class="data-table" id="visitor-table">
-                <thead>
-                    <tr><th>ID</th><th>VISITOR</th><th>RESORT</th><th>PAID</th><th>STATUS</th><th>DATE</th></tr>
-                </thead>
-                <tbody>${rows || '<tr><td colspan="6" style="text-align:center;">No records found.</td></tr>'}</tbody>
-            </table>
+            <div class="table-responsive">
+                <table class="data-table" id="visitor-table">
+                    <thead>
+                        <tr><th>ID</th><th>VISITOR</th><th>RESORT</th><th>PAID</th><th>STATUS</th><th>DATE</th></tr>
+                    </thead>
+                    <tbody>${rows || '<tr><td colspan="6" style="text-align:center;">No records found.</td></tr>'}</tbody>
+                </table>
+            </div>
         </div>
     `;
 }
@@ -362,20 +364,22 @@ async function renderReports(filter = 'Daily') {
                 <!-- Detailed Data Table -->
                 <div style="margin-bottom: 3rem;">
                     <h4 style="font-family:'Montserrat'; font-weight: 800; font-size: 1.1rem; color: #1e293b; margin-bottom: 1.25rem;">Detailed Entry Logs</h4>
-                    <table style="width: 100%; border-collapse: collapse;">
-                        <thead>
-                            <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
-                                <th style="padding: 15px; text-align: left; color: #64748b; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">Reg ID</th>
-                                <th style="padding: 15px; text-align: left; color: #64748b; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">Primary Visitor</th>
-                                <th style="padding: 15px; text-align: left; color: #64748b; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">Destination</th>
-                                <th style="padding: 15px; text-align: center; color: #64748b; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">Quantity</th>
-                                <th style="padding: 15px; text-align: right; color: #64748b; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">Total Amount</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${rows || '<tr><td colspan="5" style="text-align:center; padding: 3rem; color: #94a3b8; font-weight: 600;">No operational data recorded for this selection.</td></tr>'}
-                        </tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
+                                    <th style="padding: 15px; text-align: left; color: #64748b; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">Reg ID</th>
+                                    <th style="padding: 15px; text-align: left; color: #64748b; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">Primary Visitor</th>
+                                    <th style="padding: 15px; text-align: left; color: #64748b; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">Destination</th>
+                                    <th style="padding: 15px; text-align: center; color: #64748b; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">Quantity</th>
+                                    <th style="padding: 15px; text-align: right; color: #64748b; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">Total Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rows || '<tr><td colspan="5" style="text-align:center; padding: 3rem; color: #94a3b8; font-weight: 600;">No operational data recorded for this selection.</td></tr>'}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <!-- Report Footer (VISIBLE ON PRINT) -->
@@ -455,10 +459,10 @@ async function renderPaymentLogs() {
                 <td style="font-weight: 700; color: #059669;">${v.total}</td>
                 <td><span class="badge" style="${badgeColor}">${pStatus.toUpperCase()}</span></td>
                 <td style="text-align: center;">
-                    <button class="btn" onclick="togglePaymentStatus('${v.id}', '${pStatus}')" 
-                        style="padding: 6px; background: #f1f5f9; color: #64748b; border-radius: 8px; border: 1px solid #e2e8f0; cursor: pointer; transition: all 0.2s;"
-                        title="Toggle Payment Status">
-                        <i data-lucide="edit-3" style="width: 16px; height: 16px;"></i>
+                    <button class="btn" onclick="deleteVisitor('${v.id}')" 
+                        style="padding: 6px; background: #ef4444; color: white; border-radius: 8px; border: 1px solid #dc2626; cursor: pointer; transition: all 0.2s;"
+                        title="Delete Record">
+                        <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
                     </button>
                 </td>
             </tr>
@@ -468,28 +472,30 @@ async function renderPaymentLogs() {
     return `
         <div class="table-container fade-in">
             <h3 style="font-family:'Montserrat'; margin-bottom: 0.5rem;">Audit Trail</h3>
-            <div style="margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 20px;">
-                 <p style="font-size: 0.8rem; color: #64748b;">Click any record to toggle <span style="color:#166534;font-weight:700;">PAID</span> / <span style="color:#92400e;font-weight:700;">PENDING</span> status.</p>
+            <div class="table-header">
+                 <p style="font-size: 0.8rem; color: #64748b; margin: 0;">Manage and review all payment transactions. Use the delete button to remove a record.</p>
                  
-                 <div style="position: relative; flex: 1; max-width: 300px;">
+                 <div class="search-container">
                     <i data-lucide="search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; color: #94a3b8;"></i>
-                    <input type="text" placeholder="Search transactions..." oninput="filterTableRows(this.value, 'payment-table')" 
+                    <input type="text" placeholder="Search..." oninput="filterTableRows(this.value, 'payment-table')" 
                         style="width: 100%; padding: 0.6rem 0.6rem 0.6rem 2.5rem; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 0.85rem; outline: none; transition: all 0.2s; background: #f8fafc;">
                 </div>
             </div>
-            <table class="data-table" id="payment-table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>PAYOR</th>
-                        <th>DESTINATION</th>
-                        <th>AMOUNT</th>
-                        <th>STATUS</th>
-                        <th style="text-align: center;">ACTIONS</th>
-                    </tr>
-                </thead>
-                <tbody>${rows}</tbody>
-            </table>
+            <div class="table-responsive">
+                <table class="data-table" id="payment-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>PAYOR</th>
+                            <th>DESTINATION</th>
+                            <th>AMOUNT</th>
+                            <th>STATUS</th>
+                            <th style="text-align: center;">ACTIONS</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            </div>
         </div>
     `;
 }
@@ -513,6 +519,26 @@ async function togglePaymentStatus(id, currentStatus) {
         }
     } catch (err) {
         alert("Network error.");
+    }
+}
+
+async function deleteVisitor(id) {
+    if (!(await showConfirm(`Are you sure you want to delete record [${id}]? This action cannot be undone.`))) return;
+
+    try {
+        const response = await fetch(`/api/visitors/${id}`, {
+            method: 'DELETE'
+        });
+
+        if (response.ok) {
+            alert("Record deleted successfully.");
+            showView('payments');
+        } else {
+            const err = await response.json();
+            alert("Deletion failed: " + (err.error || "Unknown error."));
+        }
+    } catch (err) {
+        alert("Network failure.");
     }
 }
 
@@ -577,12 +603,14 @@ async function renderAccountsView() {
         </div>
 
         <div class="table-container fade-in">
-            <table class="data-table">
-                <thead>
-                    <tr><th>USERNAME</th><th>ASSIGNMENT</th><th>ACCESS LEVEL</th><th>MEMBER SINCE</th><th class="no-print">ACTIONS</th></tr>
-                </thead>
-                <tbody>${userRows}</tbody>
-            </table>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr><th>USERNAME</th><th>ASSIGNMENT</th><th>ACCESS LEVEL</th><th>MEMBER SINCE</th><th class="no-print">ACTIONS</th></tr>
+                    </thead>
+                    <tbody>${userRows}</tbody>
+                </table>
+            </div>
         </div>
     `;
 }
@@ -697,7 +725,7 @@ function toggleSidebar() {
 
 function logout() {
     localStorage.removeItem('currentUser');
-    window.location.href = 'index.html';
+    window.location.href = 'login.html';
 }
 
 async function refreshProfile() {
@@ -752,7 +780,9 @@ async function initRevenueChart() {
         resortData[v.resort] = (resortData[v.resort] || 0) + amount;
     });
 
-    const ctx = document.getElementById('revenueChart').getContext('2d');
+    const canvas = document.getElementById('revenueChart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
     new Chart(ctx, {
         type: 'bar',
         data: {
@@ -826,20 +856,22 @@ async function renderAttendanceLogs() {
             </div>
 
             <div class="table-container" style="background: white; border-radius: 24px; padding: 1.25rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
-                <table class="data-table" style="width: 100%; border-collapse: separate; border-spacing: 0;">
-                    <thead>
-                        <tr>
-                            <th style="padding: 1.25rem 1rem; text-align: left; color: #94a3b8; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #f1f5f9;">Personnel</th>
-                            <th style="padding: 1.25rem 1rem; text-align: left; color: #94a3b8; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #f1f5f9;">In</th>
-                            <th style="padding: 1.25rem 1rem; text-align: left; color: #94a3b8; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #f1f5f9;">Out</th>
-                            <th style="padding: 1.25rem 1rem; text-align: left; color: #94a3b8; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #f1f5f9;">Duty Status</th>
-                            <th style="padding: 1.25rem 1rem; text-align: left; color: #94a3b8; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #f1f5f9;">Notes</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${rows || '<tr><td colspan="5" style="text-align:center; padding: 4rem; color: #94a3b8;">No attendance records found.</td></tr>'}
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table class="data-table" style="width: 100%; border-collapse: separate; border-spacing: 0;">
+                        <thead>
+                            <tr>
+                                <th style="padding: 1.25rem 1rem; text-align: left; color: #94a3b8; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #f1f5f9;">Personnel</th>
+                                <th style="padding: 1.25rem 1rem; text-align: left; color: #94a3b8; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #f1f5f9;">In</th>
+                                <th style="padding: 1.25rem 1rem; text-align: left; color: #94a3b8; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #f1f5f9;">Out</th>
+                                <th style="padding: 1.25rem 1rem; text-align: left; color: #94a3b8; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #f1f5f9;">Duty Status</th>
+                                <th style="padding: 1.25rem 1rem; text-align: left; color: #94a3b8; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #f1f5f9;">Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rows || '<tr><td colspan="5" style="text-align:center; padding: 4rem; color: #94a3b8;">No attendance records found.</td></tr>'}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
         <style>
@@ -872,4 +904,69 @@ function filterTableRows(query, tableId) {
         const text = row.innerText.toLowerCase();
         row.style.display = text.includes(lowerQuery) ? '' : 'none';
     });
+}
+
+function renderDashboard() {
+    return `
+        <div class="stat-grid fade-in">
+            <div class="stat-card" onclick="showView('visitors')">
+                <div class="stat-header">
+                    <i data-lucide="users" style="color: var(--primary);"></i>
+                    <span class="stat-label">Total Visitors</span>
+                </div>
+                <div id="stat-total-visitors" class="stat-value">---</div>
+            </div>
+            <div class="stat-card" onclick="showView('visitors-active')">
+                <div class="stat-header">
+                    <i data-lucide="user-check" style="color: var(--success);"></i>
+                    <span class="stat-label">Currently Active</span>
+                </div>
+                <div id="stat-active-visitors" class="stat-value">---</div>
+            </div>
+            <div class="stat-card" onclick="showView('revenue')">
+                <div class="stat-header">
+                    <i data-lucide="banknote" style="color: var(--warning);"></i>
+                    <span class="stat-label">Total Collection</span>
+                </div>
+                <div id="stat-revenue" class="stat-value">---</div>
+            </div>
+        </div>
+        <div class="table-container fade-in" style="margin-top: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3 style="font-family: 'Montserrat'; font-weight: 800; font-size: 1rem; margin: 0;">Recent Registrations</h3>
+                <button class="btn btn-primary" style="padding: 6px 12px; font-size: 0.75rem;" onclick="showView('visitors')">View All</button>
+            </div>
+            <div class="table-responsive">
+                <table class="data-table" id="recent-table">
+                    <thead><tr><th>ID</th><th>Visitor</th><th>Resort</th><th>Date</th></tr></thead>
+                    <tbody id="recent-visitor-rows"></tbody>
+                </table>
+            </div>
+        </div>
+    `;
+}
+
+async function initDashboardCharts() {
+    const response = await fetch('/api/visitors');
+    const visitors = await response.json();
+    
+    document.getElementById('stat-total-visitors').innerText = visitors.length;
+    document.getElementById('stat-active-visitors').innerText = visitors.filter(v => v.status === 'Active').length;
+    
+    let total = 0;
+    visitors.forEach(v => {
+        total += parseFloat(v.total.replace('₱', '').replace(',', '')) || 0;
+    });
+    document.getElementById('stat-revenue').innerText = '₱' + total.toLocaleString();
+
+    const recentRows = visitors.slice(0, 5).map(v => `
+        <tr>
+            <td>${v.id}</td>
+            <td style="font-weight: 700;">${v.name}</td>
+            <td>${v.resort}</td>
+            <td>${new Date(v.created_at).toLocaleDateString()}</td>
+        </tr>
+    `).join('');
+    document.getElementById('recent-visitor-rows').innerHTML = recentRows;
+    lucide.createIcons();
 }

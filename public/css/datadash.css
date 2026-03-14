@@ -205,48 +205,244 @@ body.dashboard-themed {
 
     .dashboard-themed .stat-grid {
         grid-template-columns: 1fr 1fr;
-        gap: 1rem;
+        gap: 1.25rem;
     }
 
     .dashboard-themed .main-content {
-        padding: 1rem;
+        padding: 1.25rem;
+    }
+    
+    .dashboard-themed .table-container {
+        padding: 1.25rem;
     }
 }
 
 @media (max-width: 480px) {
     .dashboard-themed .stat-grid {
         grid-template-columns: 1fr;
+        gap: 1rem;
     }
 
     .dashboard-themed .table-container {
-        padding: 1rem 0.5rem;
+        padding: 1.25rem 1rem;
         width: 100%;
-        overflow: hidden;
+        overflow: visible; /* Allow child scroll */
+    }
+    
+    .dashboard-themed .main-content {
+        padding: 1rem 0.75rem;
+    }
+    
+    .dashboard-themed .data-table th,
+    .dashboard-themed .data-table td {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.75rem;
+    }
+}
+
+
+.custom-alert-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    color: var(--text-main);
+}
+
+.dashboard-themed .stat-label {
+    color: var(--text-muted);
+}
+
+.dashboard-themed .table-container {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+}
+
+.dashboard-themed h3 {
+    color: var(--text-main) !important;
+}
+
+.dashboard-themed p {
+    color: var(--text-muted) !important;
+}
+
+.dashboard-themed .data-table th {
+    color: var(--text-muted);
+    border-bottom: 2px solid var(--border-color);
+}
+
+.dashboard-themed .data-table td {
+    color: var(--text-main);
+    border-bottom: 1px solid var(--border-color);
+}
+
+
+.dashboard-themed .user-form-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+}
+
+.dashboard-themed .user-form-card label {
+    color: var(--text-main);
+}
+
+.dashboard-themed .user-form-card input,
+.dashboard-themed .user-form-card select {
+    background-color: var(--sidebar-bg);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    padding: 0.8rem 1.25rem;
+}
+
+.dashboard-themed .user-form-card select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 1.2rem;
+    padding-right: 3rem !important;
+}
+
+.dashboard-themed .badge {
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.4rem 0.8rem;
+    border-radius: 999px;
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    line-height: 1;
+}
+
+.dashboard-themed .badge-out {
+    background: rgba(241, 245, 249, 0.1);
+    color: #94a3b8;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.dashboard-themed .badge-active {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success);
+}
+
+.dashboard-themed .badge-failed {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger);
+}
+
+.dashboard-themed .badge-pending {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--warning);
+}
+
+
+.datadash-middle-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.chart-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 1.25rem;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.chart-header {
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-main);
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chart-container {
+    position: relative;
+    flex-grow: 1;
+    min-height: 250px;
+    width: 100%;
+}
+
+@media (max-width: 1024px) {
+    .datadash-middle-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+
+    .dashboard-themed .data-table th,
+    .dashboard-themed .data-table td {
+        padding: 1rem 0.75rem;
+        font-size: 0.8rem;
     }
 
-    .dashboard-themed .table-container>div {
+    .dashboard-themed .stat-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 1.25rem;
+    }
+
+    .dashboard-themed .main-content {
+        padding: 1.25rem;
+    }
+    
+    .dashboard-themed .table-container {
+        padding: 1.25rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-themed .stat-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .dashboard-themed .table-container {
+        padding: 1.25rem 1rem;
+        width: 100%;
+        overflow: visible; /* Allow child scroll */
+    }
+    
+    .dashboard-themed .main-content {
+        padding: 1rem 0.75rem;
+    }
+
+    .dashboard-themed .table-container > .table-responsive,
+    .dashboard-themed .table-container > div:last-child {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
+        margin-top: 1rem;
     }
 
     .dashboard-themed .data-table {
-        min-width: 500px;
-        
+        min-width: 700px; /* Ensure table is wider than phone screen */
     }
 
     .dashboard-themed .data-table th,
     .dashboard-themed .data-table td {
         padding: 0.75rem 0.5rem;
         font-size: 0.75rem;
-    }
-
-    
-    
-    .dashboard-themed tr th:nth-child(4),
-    .dashboard-themed tr td:nth-child(4),
-    .dashboard-themed tr th:nth-child(5),
-    .dashboard-themed tr td:nth-child(5) {
-        display: none;
     }
 }
 
@@ -324,4 +520,30 @@ body.dashboard-themed {
 .custom-alert-btn-secondary:hover {
     background: rgba(255, 255, 255, 0.1);
     color: var(--text-main);
+}
+
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.search-container {
+    position: relative;
+    flex: 1;
+    max-width: 320px;
+}
+
+@media (max-width: 768px) {
+    .table-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1.25rem;
+    }
+    
+    .search-container {
+        max-width: none !important;
+    }
 }

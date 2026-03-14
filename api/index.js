@@ -148,6 +148,15 @@ app.post('/api/visitors/status', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+app.delete('/api/visitors/:id', async (req, res) => {
+    try {
+        const id = req.params.id;
+        const result = await pool.query("DELETE FROM visitors WHERE id = $1", [id]);
+        if (result.rowCount === 0) return res.status(404).json({ error: 'Visitor record not found' });
+        res.json({ message: 'Visitor record deleted successfully' });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 
 app.get('/api/users', async (req, res) => {
     try {
