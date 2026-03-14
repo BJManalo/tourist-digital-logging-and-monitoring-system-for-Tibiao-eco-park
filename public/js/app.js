@@ -45,7 +45,7 @@ function startQRScanner() {
     const qrCodeSuccessCallback = (decodedText, decodedResult) => {
         console.log(`Code matched = ${decodedText}`, decodedResult);
         stopQRScanner();
-        navigateTo('registration-screen');
+        navigateTo('welcome-screen');
     };
 
     const config = { fps: 15, qrbox: { width: 250, height: 250 } };
