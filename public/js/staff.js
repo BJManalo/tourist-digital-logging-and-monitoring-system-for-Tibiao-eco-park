@@ -130,7 +130,7 @@ async function showView(viewId) {
 
     switch (viewId) {
         case 'dashboard':
-            viewTitle.innerText = "Operation Dashboard";
+            viewTitle.innerText = "Dashboard";
             contentArea.innerHTML = `<div style="padding: 2rem; text-align: center;">Loading Data...</div>`;
             const dashboardHtml = await renderDashboard();
             contentArea.innerHTML = dashboardHtml;
@@ -157,17 +157,17 @@ async function showView(viewId) {
             await initRevenueChart();
             break;
         case 'payments':
-            viewTitle.innerText = "Payment Logs";
+            viewTitle.innerText = "Payments";
             const paymentsHtml = await renderPaymentLogs();
             contentArea.innerHTML = paymentsHtml;
             break;
         case 'reports':
-            viewTitle.innerText = "System Reports";
+            viewTitle.innerText = "Reports";
             const reportsHtml = await renderReports('Daily');
             contentArea.innerHTML = reportsHtml;
             break;
         case 'attendance':
-            viewTitle.innerText = "Staff Attendance";
+            viewTitle.innerText = "Staff Time";
             const attendanceHtml = await renderAttendance();
             contentArea.innerHTML = attendanceHtml;
             break;
