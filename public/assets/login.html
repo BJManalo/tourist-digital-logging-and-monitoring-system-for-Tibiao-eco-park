@@ -283,7 +283,7 @@
                     <input type="password" id="password" placeholder="••••••••" required>
                     <i data-lucide="lock" class="input-icon"></i>
                     <button type="button" class="toggle-password" onclick="togglePassword()">
-                        <i data-lucide="eye" id="eye-icon" style="width: 20px; height: 20px;"></i>
+                        <i data-lucide="eye-off" id="eye-icon" style="width: 20px; height: 20px;"></i>
                     </button>
                 </div>
             </div>
@@ -306,10 +306,10 @@
             
             if (passwordInput.type === 'password') {
                 passwordInput.type = 'text';
-                eyeIcon.setAttribute('data-lucide', 'eye-off');
+                eyeIcon.setAttribute('data-lucide', 'eye');
             } else {
                 passwordInput.type = 'password';
-                eyeIcon.setAttribute('data-lucide', 'eye');
+                eyeIcon.setAttribute('data-lucide', 'eye-off');
             }
             lucide.createIcons();
         }
